@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Appointment Scheduling</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -78,17 +79,7 @@ button{
  z-index:999;
 }
 
-#loginBox,#doctorLoginBox{
- display:none;
- position:fixed;
- top:30%;
- left:50%;
- transform:translate(-50%,-50%);
- background:white;
- padding:20px;
- border-radius:10px;
- box-shadow:0 4px 12px rgba(0,0,0,.2);
-}
+.hidden{display:none;}
 
 .row{
  display:flex;
@@ -99,13 +90,9 @@ button{
  margin:10px 0;
  border-radius:8px;
 }
-
-.row button{
- width:40px;
- margin-left:12px;
-}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -118,7 +105,9 @@ button{
 
 <div class="card">
 <h2>Book Appointment</h2>
+
 <form id="appointmentForm">
+
 <label>Name</label>
 <input id="name" type="text">
 
@@ -147,10 +136,11 @@ button{
 
 <div class="card">
 <h2>Manage Appointment</h2>
+
 <button class="secondary" onclick="showEdit()">Edit Appointment</button>
 <button class="danger" onclick="showCancel()">Cancel Appointment</button>
 
-<div id="editBox" style="display:none;">
+<div id="editBox" class="hidden">
 <label>Name</label>
 <input id="editName">
 
@@ -173,7 +163,7 @@ button{
 <button type="button" onclick="editAppointment()">Update Appointment</button>
 </div>
 
-<div id="cancelBox" style="display:none;">
+<div id="cancelBox" class="hidden">
 <label>Name</label>
 <input id="cancelName">
 
@@ -182,18 +172,19 @@ button{
 
 <button type="button" class="danger" onclick="cancelAppointment()">Cancel Appointment</button>
 </div>
-</div>
 
 </div>
+</div>
 
-<div id="loginBox">
+<!-- LOGIN BOXES -->
+<div id="loginBox" class="hidden">
 <h3>Nurse Login</h3>
 <input id="username" placeholder="Username">
 <input id="password" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 </div>
 
-<div id="doctorLoginBox">
+<div id="doctorLoginBox" class="hidden">
 <h3>Doctor Login</h3>
 <select id="doctorSelect">
 <option value="">Choose Doctor</option>
@@ -204,13 +195,14 @@ button{
 <button onclick="doctorLogin()">Login</button>
 </div>
 
-<div id="nursePage" style="display:none;padding:20px;">
+<!-- PAGES -->
+<div id="nursePage" class="hidden" style="padding:20px;">
 <button onclick="goBack()">⬅ Back</button>
 <h2>All Appointments</h2>
 <div id="nurseList"></div>
 </div>
 
-<div id="doctorPage" style="display:none;padding:20px;">
+<div id="doctorPage" class="hidden" style="padding:20px;">
 <button onclick="goBack()">⬅ Back</button>
 <h2>Doctor Schedule</h2>
 <div id="doctorList"></div>
@@ -219,15 +211,25 @@ button{
 <div id="message"></div>
 
 <script>
-/* -------------------- SUPABASE -------------------- */
+/* ---------------- SUPABASE ---------------- */
 const SUPABASE_URL = "https://xphczwydrcuvqsuthiii.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const supabaseClient = supabase.createClient(
-SUPABASE_URL,
-SUPABASE_ANON_KEY
-);
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
 
-/* -------------------- UI -------------------- */
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------------- ELEMENTS ---------------- */
+const mainContainer = document.getElementById('mainContainer');
+const loginBox = document.getElementById('loginBox');
+const doctorLoginBox = document.getElementById('doctorLoginBox');
+const nursePage = document.getElementById('nursePage');
+const doctorPage = document.getElementById('doctorPage');
+const nurseList = document.getElementById('nurseList');
+const doctorList = document.getElementById('doctorList');
+
+const editBox = document.getElementById('editBox');
+const cancelBox = document.getElementById('cancelBox');
+
+/* ---------------- UI ---------------- */
 function showMessage(text,error=false){
  let m=document.getElementById('message');
  m.innerText=text;
@@ -237,30 +239,30 @@ function showMessage(text,error=false){
 }
 
 function showEdit(){
- editBox.style.display='block';
- cancelBox.style.display='none';
+ editBox.classList.remove('hidden');
+ cancelBox.classList.add('hidden');
 }
 
 function showCancel(){
- cancelBox.style.display='block';
- editBox.style.display='none';
+ cancelBox.classList.remove('hidden');
+ editBox.classList.add('hidden');
 }
 
 function showLogin(){
- loginBox.style.display='block';
+ loginBox.classList.remove('hidden');
 }
 
 function showDoctorLogin(){
- doctorLoginBox.style.display='block';
+ doctorLoginBox.classList.remove('hidden');
 }
 
 function goBack(){
  mainContainer.style.display='block';
- nursePage.style.display='none';
- doctorPage.style.display='none';
+ nursePage.classList.add('hidden');
+ doctorPage.classList.add('hidden');
 }
 
-/* -------------------- DATA -------------------- */
+/* ---------------- LOAD ---------------- */
 let appointments=[];
 
 async function loadAppointments(){
@@ -270,25 +272,25 @@ const {data,error}=await supabaseClient
 .order('date');
 
 if(error){
- console.error(error);
  showMessage('Database load error',true);
+ console.error(error);
  return;
 }
 
 appointments=data||[];
 }
 
-/* -------------------- BOOK -------------------- */
-document.getElementById('appointmentForm').addEventListener('submit', async function(e){
+/* ---------------- BOOK ---------------- */
+document.getElementById('appointmentForm').addEventListener('submit', async (e)=>{
 e.preventDefault();
 
-let appt={
-name:name.value,
-dob:dob.value,
-email:email.value,
-date:date.value,
-time:time.value,
-doctor:doctor.value,
+const appt={
+name:document.getElementById('name').value,
+dob:document.getElementById('dob').value,
+email:document.getElementById('email').value,
+date:document.getElementById('date').value,
+time:document.getElementById('time').value,
+doctor:document.getElementById('doctor').value,
 notes:''
 };
 
@@ -303,87 +305,43 @@ const {error}=await supabaseClient
 
 if(error){
 showMessage('Could not save appointment',true);
+console.error(error);
 return;
 }
 
-showMessage(`Success: ${appt.name} appointment booked`);
-this.reset();
+showMessage('Appointment booked!');
+e.target.reset();
 await loadAppointments();
 });
 
-/* -------------------- EDIT -------------------- */
-async function editAppointment(){
-await loadAppointments();
-
-let found=appointments.find(a=>
-a.name===editName.value &&
-a.dob===editDOB.value
-);
-
-if(!found){
-showMessage('Appointment not found',true);
-return;
-}
-
-const updates={};
-if(newDate.value) updates.date=newDate.value;
-if(newTime.value) updates.time=newTime.value;
-if(newDoctor.value) updates.doctor=newDoctor.value;
-
-const {error}=await supabaseClient
-.from('appointments')
-.update(updates)
-.eq('id',found.id);
-
-if(error){
-showMessage('Update failed',true);
-return;
-}
-
-showMessage('Appointment updated');
-await loadAppointments();
-}
-
-/* -------------------- CANCEL -------------------- */
-async function cancelAppointment(){
-await loadAppointments();
-
-let found=appointments.find(a=>
-a.name===cancelName.value &&
-a.dob===cancelDOB.value
-);
-
-if(!found){
-showMessage('Appointment not found',true);
-return;
-}
-
-const {error}=await supabaseClient
-.from('appointments')
-.delete()
-.eq('id',found.id);
-
-if(error){
-showMessage('Delete failed',true);
-return;
-}
-
-showMessage('Appointment cancelled');
-await loadAppointments();
-}
-
-/* -------------------- NURSE -------------------- */
+/* ---------------- LOGIN ---------------- */
 function login(){
 if(username.value==='nurse' && password.value==='1234'){
 mainContainer.style.display='none';
-loginBox.style.display='none';
-nursePage.style.display='block';
+loginBox.classList.add('hidden');
+nursePage.classList.remove('hidden');
 renderNurse();
 }else{
 showMessage('Invalid login',true);
 }
 }
 
+function doctorLogin(){
+const doc=document.getElementById('doctorSelect').value;
+const pass=document.getElementById('doctorPass').value;
+
+if(!doc || pass!=='1234'){
+showMessage('Invalid login',true);
+return;
+}
+
+mainContainer.style.display='none';
+doctorLoginBox.classList.add('hidden');
+doctorPage.classList.remove('hidden');
+renderDoctor(doc);
+}
+
+/* ---------------- RENDER ---------------- */
 async function renderNurse(){
 await loadAppointments();
 nurseList.innerHTML='';
@@ -392,78 +350,42 @@ appointments.forEach(a=>{
 let row=document.createElement('div');
 row.className='row';
 
-let info=document.createElement('span');
-info.innerText=`${a.name} - ${a.date} ${a.time}`;
+row.innerHTML=`${a.name} - ${a.date} ${a.time}`;
 
-let del=document.createElement('button');
-del.innerText='X';
-
-del.onclick=async()=>{
-if(confirm('Delete appointment?')){
-await supabaseClient
-.from('appointments')
-.delete()
-.eq('id',a.id);
-renderNurse();
-}
-};
-
-row.appendChild(info);
-row.appendChild(del);
 nurseList.appendChild(row);
 });
-}
-
-/* -------------------- DOCTOR -------------------- */
-function doctorLogin(){
-let selectedDoctor=doctorSelect.value;
-
-if(!selectedDoctor || doctorPass.value!=='1234'){
-showMessage('Invalid login',true);
-return;
-}
-
-mainContainer.style.display='none';
-doctorLoginBox.style.display='none';
-doctorPage.style.display='block';
-renderDoctor(selectedDoctor);
 }
 
 async function renderDoctor(doc){
 await loadAppointments();
 doctorList.innerHTML='';
 
-appointments
-.filter(a=>a.doctor===doc)
-.forEach(a=>{
-
+appointments.filter(a=>a.doctor===doc).forEach(a=>{
 let div=document.createElement('div');
 div.className='card';
 
-let info=document.createElement('p');
-info.innerText=`${a.name} — ${a.date} ${a.time}`;
+div.innerHTML=`
+<p>${a.name} — ${a.date} ${a.time}</p>
+<textarea id="note-${a.id}">${a.notes||''}</textarea>
+<button onclick="saveNote('${a.id}')">Save Notes</button>
+`;
 
-let notes=document.createElement('textarea');
-notes.value=a.notes||'';
-
-let btn=document.createElement('button');
-btn.innerText='Save Notes';
-
-btn.onclick=async()=>{
-await supabaseClient
-.from('appointments')
-.update({notes:notes.value})
-.eq('id',a.id);
-showMessage('Notes saved');
-};
-
-div.appendChild(info);
-div.appendChild(notes);
-div.appendChild(btn);
 doctorList.appendChild(div);
 });
 }
 
+async function saveNote(id){
+const val=document.getElementById('note-'+id).value;
+
+await supabaseClient
+.from('appointments')
+.update({notes:val})
+.eq('id',id);
+
+showMessage('Notes saved');
+}
+
+/* ---------------- INIT ---------------- */
 loadAppointments();
 </script>
 
