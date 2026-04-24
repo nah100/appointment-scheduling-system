@@ -2,98 +2,185 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment System</title>
+<title>Appointment Scheduling</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{font-family:Arial;margin:0;background:#f4f6f9;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;position:relative;}
-header button{position:absolute;top:15px;padding:8px 12px;}
+body {
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f6f9;
+    margin:0;
+}
 
-.container{max-width:700px;margin:20px auto;}
-.card{background:white;padding:20px;margin-bottom:15px;border-radius:10px;}
+header{
+ background:#2c3e50;
+ color:white;
+ padding:15px;
+ text-align:center;
+ position:relative;
+}
 
-label{display:block;margin-top:10px;font-weight:bold;}
-input,select{width:100%;padding:8px;margin-top:5px;box-sizing:border-box;}
+header button{
+ position:absolute;
+ top:15px;
+ padding:8px 15px;
+}
 
-button{margin-top:10px;padding:10px;background:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;}
-button:hover{background:#2980b9;}
+.container{
+ max-width:600px;
+ margin:30px auto;
+}
 
-.hidden{display:none;}
+.card{
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ margin-bottom:20px;
+ box-shadow:0px 4px 12px rgba(0,0,0,.1);
+}
 
-.row{display:flex;justify-content:space-between;background:#ecf0f1;padding:10px;margin:8px 0;border-radius:6px;}
+label{
+ display:block;
+ margin-top:10px;
+ font-weight:bold;
+}
 
-#msg{position:fixed;top:10px;right:10px;padding:10px;color:white;display:none;border-radius:6px;z-index:999;}
+input,select,textarea{
+ width:100%;
+ padding:10px;
+ margin-top:5px;
+ border-radius:6px;
+ border:1px solid #ccc;
+ box-sizing:border-box;
+}
+
+button{
+ padding:12px;
+ margin-top:10px;
+ border:none;
+ border-radius:6px;
+ background:#3498db;
+ color:white;
+ cursor:pointer;
+}
+
+.secondary{background:#27ae60;}
+.danger{background:#e74c3c;}
+
+#message{
+ position:fixed;
+ top:20px;
+ right:20px;
+ color:white;
+ padding:15px;
+ border-radius:8px;
+ display:none;
+ z-index:999;
+}
+
+#loginBox,#doctorLoginBox{
+ display:none;
+ position:fixed;
+ top:30%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+
+.row{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ background:#ecf0f1;
+ padding:12px;
+ margin:10px 0;
+ border-radius:8px;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Appointment System</h2>
-<button onclick="showDoctorLogin()" style="right:120px;">Doctor Login</button>
-<button onclick="showNurseLogin()" style="right:10px;">Nurse Login</button>
+<h1>Appointment Scheduling System</h1>
+<button onclick="showDoctorLogin()" style="right:130px;">Doctor Login</button>
+<button onclick="showLogin()" style="right:20px;">Nurse Login</button>
 </header>
 
-<div class="container" id="main">
+<div class="container" id="mainContainer">
 
-<!-- BOOK -->
 <div class="card">
-<h3>Book Appointment</h3>
+<h2>Book Appointment</h2>
 
-<form id="form">
+<form id="appointmentForm">
 
 <label>Name</label>
-<input id="name">
+<input id="name" type="text">
 
-<label>DOB</label>
+<label>Date of Birth</label>
 <input id="dob" type="date">
 
 <label>Email</label>
-<input id="email">
+<input id="email" type="email">
 
-<label>Date</label>
+<label>Appointment Date</label>
 <input id="date" type="date">
 
-<label>Time</label>
+<label>Appointment Time</label>
 <input id="time" type="time">
 
-<label>Doctor</label>
+<label>Select Doctor</label>
 <select id="doctor">
-<option value="">Select Doctor</option>
-<option>Dr. Smith</option>
-<option>Dr. Brown</option>
+<option value="">Choose Doctor</option>
+<option value="Dr. Smith">Dr. Smith</option>
+<option value="Dr. Brown">Dr. Brown</option>
 </select>
 
-<button type="submit">Book</button>
+<button type="submit">Book Appointment</button>
 </form>
 </div>
 
-<!-- EDIT -->
 <div class="card">
-<h3>Manage Appointment</h3>
+<h2>Manage Appointment</h2>
 
-<button onclick="toggleEdit()">Edit</button>
-<button onclick="toggleCancel()">Cancel</button>
+<button class="secondary" onclick="showEdit()">Edit Appointment</button>
+<button class="danger" onclick="showCancel()">Cancel Appointment</button>
 
-<div id="editBox" class="hidden">
-<input id="editName" placeholder="Name">
+<div id="editBox" style="display:none;">
+<label>Name</label>
+<input id="editName">
+
+<label>Date of Birth</label>
 <input id="editDOB" type="date">
+
+<label>New Date</label>
 <input id="newDate" type="date">
+
+<label>New Time</label>
 <input id="newTime" type="time">
+
+<label>New Doctor</label>
 <select id="newDoctor">
 <option value="">Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-<button onclick="editAppt()">Update</button>
+
+<button type="button" onclick="editAppointment()">Update Appointment</button>
 </div>
 
-<div id="cancelBox" class="hidden">
-<input id="cancelName" placeholder="Name">
+<div id="cancelBox" style="display:none;">
+<label>Name</label>
+<input id="cancelName">
+
+<label>Date of Birth</label>
 <input id="cancelDOB" type="date">
-<button onclick="cancelAppt()">Cancel</button>
+
+<button type="button" class="danger" onclick="cancelAppointment()">Cancel Appointment</button>
 </div>
 
 </div>
@@ -101,17 +188,17 @@ button:hover{background:#2980b9;}
 </div>
 
 <!-- LOGIN BOXES -->
-<div id="nurseLogin" class="hidden card">
+<div id="loginBox">
 <h3>Nurse Login</h3>
-<input id="nurseUser" placeholder="Username">
-<input id="nursePass" type="password" placeholder="Password">
-<button onclick="nurseLogin()">Login</button>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 </div>
 
-<div id="doctorLogin" class="hidden card">
+<div id="doctorLoginBox">
 <h3>Doctor Login</h3>
 <select id="doctorSelect">
-<option value="">Select Doctor</option>
+<option value="">Choose Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
@@ -119,33 +206,34 @@ button:hover{background:#2980b9;}
 <button onclick="doctorLogin()">Login</button>
 </div>
 
-<!-- PAGES -->
-<div id="nursePage" class="hidden container">
-<h3>Nurse Dashboard</h3>
+<!-- DASHBOARDS -->
+<div id="nursePage" style="display:none;padding:20px;">
+<button onclick="goBack()">⬅ Back</button>
+<h2>Nurse Dashboard</h2>
 <div id="nurseList"></div>
-<button onclick="back()">Back</button>
 </div>
 
-<div id="doctorPage" class="hidden container">
-<h3>Doctor Dashboard</h3>
+<div id="doctorPage" style="display:none;padding:20px;">
+<button onclick="goBack()">⬅ Back</button>
+<h2>Doctor Dashboard</h2>
 <div id="doctorList"></div>
-<button onclick="back()">Back</button>
 </div>
 
-<div id="msg"></div>
+<div id="message"></div>
 
 <script>
 
 /* ---------------- SUPABASE ---------------- */
-const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey = "YOUR_ANON_KEY_HERE";
-const db = supabase.createClient(supabaseUrl, supabaseKey);
+const SUPABASE_URL = "https://xphczwydrcuvqsuthiii.supabase.co";
+const SUPABASE_KEY = "YOUR_ANON_KEY_HERE";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ---------------- HELPERS ---------------- */
 const get = (id)=>document.getElementById(id).value.trim();
 
 function msg(text,err=false){
-let m=document.getElementById("msg");
+let m=document.getElementById("message");
 m.style.background=err?"#e74c3c":"#2ecc71";
 m.innerText=text;
 m.style.display="block";
@@ -153,7 +241,7 @@ setTimeout(()=>m.style.display="none",3000);
 }
 
 /* ---------------- BOOK ---------------- */
-document.getElementById("form").addEventListener("submit", async (e)=>{
+document.getElementById("appointmentForm").addEventListener("submit", async (e)=>{
 e.preventDefault();
 
 const appt={
@@ -166,9 +254,10 @@ doctor:get("doctor"),
 notes:""
 };
 
-console.log("APPT:",appt);
+/* ONLY REQUIRED FIELDS (FIXED) */
+const required=["name","dob","email","date","time","doctor"];
 
-for(let k in appt){
+for(let k of required){
 if(!appt[k]){
 msg("Missing: "+k,true);
 return;
@@ -183,12 +272,27 @@ msg(error.message,true);
 return;
 }
 
-msg("Booked!");
+msg("Appointment booked!");
 e.target.reset();
+refreshNurseList();
 });
 
+/* ---------------- LOAD LIST ---------------- */
+async function refreshNurseList(){
+const {data}=await db.from("appointments").select("*");
+
+nurseList.innerHTML="";
+
+data.forEach(a=>{
+let row=document.createElement("div");
+row.className="row";
+row.innerText=`${a.name} - ${a.date} ${a.time} (${a.doctor})`;
+nurseList.appendChild(row);
+});
+}
+
 /* ---------------- EDIT ---------------- */
-async function editAppt(){
+async function editAppointment(){
 const name=get("editName");
 const dob=get("editDOB");
 
@@ -209,10 +313,11 @@ if(get("newDoctor")) updates.doctor=get("newDoctor");
 await db.from("appointments").update(updates).eq("id",found.id);
 
 msg("Updated!");
+refreshNurseList();
 }
 
 /* ---------------- CANCEL ---------------- */
-async function cancelAppt(){
+async function cancelAppointment(){
 const name=get("cancelName");
 const dob=get("cancelDOB");
 
@@ -228,53 +333,42 @@ return;
 await db.from("appointments").delete().eq("id",found.id);
 
 msg("Cancelled!");
+refreshNurseList();
 }
 
 /* ---------------- LOGIN ---------------- */
-function showNurseLogin(){
-document.getElementById("nurseLogin").classList.remove("hidden");
+function showLogin(){
+document.getElementById("loginBox").style.display="block";
 }
 
 function showDoctorLogin(){
-document.getElementById("doctorLogin").classList.remove("hidden");
+document.getElementById("doctorLoginBox").style.display="block";
 }
 
-function nurseLogin(){
-if(nurseUser.value==="nurse" && nursePass.value==="1234"){
-document.getElementById("main").classList.add("hidden");
-document.getElementById("nurseLogin").classList.add("hidden");
-document.getElementById("nursePage").classList.remove("hidden");
-loadNurse();
-}else msg("Invalid",true);
+function login(){
+if(username.value==="nurse" && password.value==="1234"){
+mainContainer.style.display="none";
+loginBox.style.display="none";
+nursePage.style.display="block";
+refreshNurseList();
+}else msg("Invalid login",true);
 }
 
 function doctorLogin(){
 let doc=doctorSelect.value;
 if(!doc || doctorPass.value!=="1234"){
-msg("Invalid",true);
+msg("Invalid login",true);
 return;
 }
 
-document.getElementById("main").classList.add("hidden");
-document.getElementById("doctorLogin").classList.add("hidden");
-document.getElementById("doctorPage").classList.remove("hidden");
+mainContainer.style.display="none";
+doctorLoginBox.style.display="none";
+doctorPage.style.display="block";
 
 loadDoctor(doc);
 }
 
-/* ---------------- LOAD ---------------- */
-async function loadNurse(){
-const {data}=await db.from("appointments").select("*");
-
-nurseList.innerHTML="";
-data.forEach(a=>{
-let div=document.createElement("div");
-div.className="row";
-div.innerText=`${a.name} - ${a.date} ${a.time}`;
-nurseList.appendChild(div);
-});
-}
-
+/* ---------------- DOCTOR ---------------- */
 async function loadDoctor(doc){
 const {data}=await db.from("appointments").select("*");
 
@@ -283,11 +377,13 @@ doctorList.innerHTML="";
 data.filter(a=>a.doctor===doc).forEach(a=>{
 let div=document.createElement("div");
 div.className="card";
+
 div.innerHTML=`
 <p>${a.name} - ${a.date} ${a.time}</p>
 <textarea id="n${a.id}">${a.notes||""}</textarea>
-<button onclick="saveNote(${a.id})">Save</button>
+<button onclick="saveNote(${a.id})">Save Notes</button>
 `;
+
 doctorList.appendChild(div);
 });
 }
@@ -299,20 +395,23 @@ msg("Saved");
 }
 
 /* ---------------- NAV ---------------- */
-function back(){
+function goBack(){
 location.reload();
 }
 
-/* ---------------- TOGGLES ---------------- */
-function toggleEdit(){
-editBox.classList.toggle("hidden");
-cancelBox.classList.add("hidden");
+/* ---------------- UI ---------------- */
+function showEdit(){
+editBox.style.display="block";
+cancelBox.style.display="none";
 }
 
-function toggleCancel(){
-cancelBox.classList.toggle("hidden");
-editBox.classList.add("hidden");
+function showCancel(){
+cancelBox.style.display="block";
+editBox.style.display="none";
 }
+
+/* INIT */
+refreshNurseList();
 
 </script>
 
