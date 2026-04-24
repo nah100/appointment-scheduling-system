@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Appointment Scheduling</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    position: relative;
+}
+
+header button {
+    position: absolute;
+    top: 15px;
+    padding: 8px 15px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 30px auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #3498db;
+    color: white;
+    cursor: pointer;
+}
+
+.secondary { background: #27ae60; }
+.danger { background: #e74c3c; }
+
+#message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    display: none;
+}
+
+#loginBox, #doctorLoginBox {
+    display:none;
+    position:fixed;
+    top:30%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ecf0f1;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.row button {
+    width: 40px;
+    margin-left: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Appointment Scheduling System</h1>
+<button onclick="showDoctorLogin()" style="right:130px;">Doctor Login</button>
+<button onclick="showLogin()" style="right:20px;">Nurse Login</button>
+</header>
+
+<div class="container" id="mainContainer">
+
+<div class="card">
+<h2>Book Appointment</h2>
+
+<form id="appointmentForm">
+<label>Name</label>
+<input type="text" id="name">
+
+<label>Date of Birth</label>
+<input type="date" id="dob">
+
+<label>Email</label>
+<input type="email" id="email">
+
+<label>Appointment Date</label>
+<input type="date" id="date">
+
+<label>Appointment Time</label>
+<input type="time" id="time">
+
+<label>Select Doctor</label>
+<select id="doctor">
+<option value="">Choose Doctor</option>
+<option value="Dr. Smith">Dr. Smith</option>
+<option value="Dr. Brown">Dr. Brown</option>
+</select>
+
+<button type="submit">Book Appointment</button>
+</form>
+</div>
+
+<div class="card">
+<h2>Manage Appointment</h2>
+
+<button class="secondary" onclick="showEdit()">Edit Appointment</button>
+<button class="danger" onclick="showCancel()">Cancel Appointment</button>
+
+<div id="editBox" style="display:none;">
+<label>Name</label>
+<input id="editName">
+
+<label>Date of Birth</label>
+<input id="editDOB" type="date">
+
+<label>New Date</label>
+<input id="newDate" type="date">
+
+<label>New Time</label>
+<input id="newTime" type="time">
+
+<label>New Doctor</label>
+<select id="newDoctor">
+<option value="">Doctor</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+
+<button onclick="edit()">Update Appointment</button>
+</div>
+
+<div id="cancelBox" style="display:none;">
+<label>Name</label>
+<input id="cancelName">
+
+<label>Date of Birth</label>
+<input id="cancelDOB" type="date">
+
+<button class="danger" onclick="cancel()">Cancel Appointment</button>
+</div>
+
+</div>
+</div>
+
+<!-- Nurse Login -->
+<div id="loginBox">
+<h3>Nurse Login</h3>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- Doctor Login -->
+<div id="doctorLoginBox">
+<h3>Doctor Login</h3>
+
+<label>Select Doctor</label>
+<select id="doctorSelect">
+<option value="">Choose Doctor</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+
+<input id="doctorPass" type="password" placeholder="Password">
+<button onclick="doctorLogin()">Login</button>
+</div>
+
+<!-- Nurse Page -->
+<div id="nursePage" style="display:none; padding:20px;">
+<button onclick="goBack()">⬅ Back</button>
+<h2>All Appointments</h2>
+<div id="nurseList"></div>
+</div>
+
+<!-- Doctor Page -->
+<div id="doctorPage" style="display:none; padding:20px;">
+<button onclick="goBack()">⬅ Back</button>
+<h2>Doctor Schedule</h2>
+<div id="doctorList"></div>
+</div>
+
+<div id="message"></div>
+
+<script>
+// MESSAGE
+function showMessage(text, error=false){
+let m=document.getElementById("message");
+m.innerText=text;
+m.style.background=error?"#e74c3c":"#2ecc71";
+m.style.display="block";
+setTimeout(()=>m.style.display="none",3000);
+}
+
+// DATABASE
+class DB{
+static data=[];
+static load(){
+let d=localStorage.getItem("appointments");
+if(d) this.data=JSON.parse(d);
+}
+static save(){
+localStorage.setItem("appointments", JSON.stringify(this.data));
+}
+}
+DB.load();
+
+// BOOK
+document.getElementById("appointmentForm").addEventListener("submit",function(e){
+e.preventDefault();
+
+let name=document.getElementById("name").value;
+let dob=document.getElementById("dob").value;
+let email=document.getElementById("email").value;
+let date=document.getElementById("date").value;
+let time=document.getElementById("time").value;
+let doctor=document.getElementById("doctor").value;
+
+if(!name||!dob||!email||!date||!time||!doctor){
+showMessage("Please fill all fields",true);
+return;
+}
+
+DB.data.push({name,dob,email,date,time,doctor,notes:""});
+DB.save();
+
+showMessage(`Success: ${name} appointment booked`);
+});
+
+// EDIT
+function showEdit(){
+editBox.style.display="block";
+cancelBox.style.display="none";
+}
+
+function showCancel(){
+cancelBox.style.display="block";
+editBox.style.display="none";
+}
+
+function edit(){
+let a=DB.data.find(x=>x.name===editName.value && x.dob===editDOB.value);
+if(!a){showMessage("Appointment not found",true);return;}
+
+if(newDate.value) a.date=newDate.value;
+if(newTime.value) a.time=newTime.value;
+if(newDoctor.value) a.doctor=newDoctor.value;
+
+DB.save();
+showMessage("Appointment updated");
+}
+
+// CANCEL
+function cancel(){
+let i=DB.data.findIndex(x=>x.name===cancelName.value && x.dob===cancelDOB.value);
+if(i===-1){showMessage("Appointment not found",true);return;}
+
+DB.data.splice(i,1);
+DB.save();
+showMessage("Appointment cancelled");
+}
+
+// NURSE LOGIN
+function showLogin(){ loginBox.style.display="block"; }
+
+function login(){
+if(username.value==="nurse" && password.value==="1234"){
+mainContainer.style.display="none";
+nursePage.style.display="block";
+loginBox.style.display="none";
+renderNurse();
+}else showMessage("Invalid login",true);
+}
+
+// DOCTOR LOGIN
+function showDoctorLogin(){ doctorLoginBox.style.display="block"; }
+
+function doctorLogin(){
+let d=doctorSelect.value;
+
+if(!d || doctorPass.value!=="1234"){
+showMessage("Invalid login",true);
+return;
+}
+
+mainContainer.style.display="none";
+doctorPage.style.display="block";
+doctorLoginBox.style.display="none";
+renderDoctor(d);
+}
+
+// NURSE VIEW (FIXED RIGHT SIDE BUTTON)
+function renderNurse(){
+nurseList.innerHTML="";
+
+DB.data.forEach(a=>{
+let row=document.createElement("div");
+row.className="row";
+
+let info=document.createElement("span");
+info.innerText=`${a.name} - ${a.date} ${a.time}`;
+
+let del=document.createElement("button");
+del.innerText="X";
+
+del.onclick=()=>{
+if(confirm("Delete appointment?")){
+DB.data=DB.data.filter(x=>x!==a);
+DB.save();
+renderNurse();
+}
+};
+
+row.appendChild(info);
+row.appendChild(del);
+nurseList.appendChild(row);
+});
+}
+
+// DOCTOR VIEW + NOTES
+function renderDoctor(d){
+doctorList.innerHTML="";
+
+DB.data.filter(x=>x.doctor===d).forEach(a=>{
+let div=document.createElement("div");
+div.className="card";
+
+let info=document.createElement("p");
+info.innerText=`${a.name} - ${a.date} ${a.time}`;
+
+let notes=document.createElement("textarea");
+notes.style.width="100%";
+notes.value=a.notes;
+
+let btn=document.createElement("button");
+btn.innerText="Save Notes";
+
+btn.onclick=()=>{
+a.notes=notes.value;
+DB.save();
+showMessage("Notes saved");
+};
+
+div.appendChild(info);
+div.appendChild(notes);
+div.appendChild(btn);
+doctorList.appendChild(div);
+});
+}
+
+// BACK
+function goBack(){
+mainContainer.style.display="block";
+nursePage.style.display="none";
+doctorPage.style.display="none";
+}
+</script>
+
+</body>
+</html>
