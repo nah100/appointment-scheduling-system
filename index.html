@@ -2,391 +2,125 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment Scheduling</title>
-
+<title>Appointment System</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {
-    font-family:'Segoe UI',sans-serif;
-    background:#f4f6f9;
-    margin:0;
-}
-
-header{
- background:#2c3e50;
- color:white;
- padding:15px;
- text-align:center;
- position:relative;
-}
-
-header button{
- position:absolute;
- top:15px;
- padding:8px 15px;
-}
-
-.container{
- max-width:600px;
- margin:30px auto;
-}
-
-.card{
- background:white;
- padding:20px;
- border-radius:10px;
- margin-bottom:20px;
- box-shadow:0px 4px 12px rgba(0,0,0,.1);
-}
-
-label{
- display:block;
- margin-top:10px;
- font-weight:bold;
-}
-
-input,select,textarea{
- width:100%;
- padding:10px;
- margin-top:5px;
- border-radius:6px;
- border:1px solid #ccc;
- box-sizing:border-box;
-}
-
-button{
- padding:12px;
- margin-top:10px;
- border:none;
- border-radius:6px;
- background:#3498db;
- color:white;
- cursor:pointer;
-}
-
-.secondary{background:#27ae60;}
-.danger{background:#e74c3c;}
-
-#message{
- position:fixed;
- top:20px;
- right:20px;
- color:white;
- padding:15px;
- border-radius:8px;
- display:none;
- z-index:999;
-}
-
+body {font-family:Arial;margin:0;background:#f4f6f9;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+.container{max-width:700px;margin:20px auto;}
+.card{background:white;padding:20px;margin-bottom:20px;border-radius:10px;}
+label{display:block;margin-top:10px;font-weight:bold;}
+input,select{width:100%;padding:8px;margin-top:5px;}
+button{margin-top:10px;padding:10px;background:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;}
+button:hover{background:#2980b9;}
+#msg{position:fixed;top:10px;right:10px;padding:10px;color:white;display:none;border-radius:6px;}
 .hidden{display:none;}
-
-.row{
- display:flex;
- justify-content:space-between;
- align-items:center;
- background:#ecf0f1;
- padding:12px;
- margin:10px 0;
- border-radius:8px;
-}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>Appointment Scheduling System</h1>
-<button onclick="showDoctorLogin()" style="right:130px;">Doctor Login</button>
-<button onclick="showLogin()" style="right:20px;">Nurse Login</button>
+<h2>Appointment Scheduling</h2>
 </header>
 
-<div class="container" id="mainContainer">
+<div class="container">
 
 <div class="card">
-<h2>Book Appointment</h2>
+<h3>Book Appointment</h3>
 
-<form id="appointmentForm">
+<form id="form">
 
 <label>Name</label>
-<input id="name" type="text">
+<input id="name">
 
-<label>Date of Birth</label>
+<label>DOB</label>
 <input id="dob" type="date">
 
 <label>Email</label>
 <input id="email" type="email">
 
-<label>Appointment Date</label>
+<label>Date</label>
 <input id="date" type="date">
 
-<label>Appointment Time</label>
+<label>Time</label>
 <input id="time" type="time">
 
-<label>Select Doctor</label>
+<label>Doctor</label>
 <select id="doctor">
-<option value="">Choose Doctor</option>
-<option value="Dr. Smith">Dr. Smith</option>
-<option value="Dr. Brown">Dr. Brown</option>
+<option value="">Select</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
 </select>
 
-<button type="submit">Book Appointment</button>
+<button type="submit">Book</button>
 </form>
 </div>
 
-<div class="card">
-<h2>Manage Appointment</h2>
-
-<button class="secondary" onclick="showEdit()">Edit Appointment</button>
-<button class="danger" onclick="showCancel()">Cancel Appointment</button>
-
-<div id="editBox" class="hidden">
-<label>Name</label>
-<input id="editName">
-
-<label>Date of Birth</label>
-<input id="editDOB" type="date">
-
-<label>New Date</label>
-<input id="newDate" type="date">
-
-<label>New Time</label>
-<input id="newTime" type="time">
-
-<label>New Doctor</label>
-<select id="newDoctor">
-<option value="">Doctor</option>
-<option>Dr. Smith</option>
-<option>Dr. Brown</option>
-</select>
-
-<button type="button" onclick="editAppointment()">Update Appointment</button>
 </div>
 
-<div id="cancelBox" class="hidden">
-<label>Name</label>
-<input id="cancelName">
-
-<label>Date of Birth</label>
-<input id="cancelDOB" type="date">
-
-<button type="button" class="danger" onclick="cancelAppointment()">Cancel Appointment</button>
-</div>
-
-</div>
-</div>
-
-<!-- LOGIN BOXES -->
-<div id="loginBox" class="hidden">
-<h3>Nurse Login</h3>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
-<div id="doctorLoginBox" class="hidden">
-<h3>Doctor Login</h3>
-<select id="doctorSelect">
-<option value="">Choose Doctor</option>
-<option>Dr. Smith</option>
-<option>Dr. Brown</option>
-</select>
-<input id="doctorPass" type="password" placeholder="Password">
-<button onclick="doctorLogin()">Login</button>
-</div>
-
-<!-- PAGES -->
-<div id="nursePage" class="hidden" style="padding:20px;">
-<button onclick="goBack()">⬅ Back</button>
-<h2>All Appointments</h2>
-<div id="nurseList"></div>
-</div>
-
-<div id="doctorPage" class="hidden" style="padding:20px;">
-<button onclick="goBack()">⬅ Back</button>
-<h2>Doctor Schedule</h2>
-<div id="doctorList"></div>
-</div>
-
-<div id="message"></div>
+<div id="msg"></div>
 
 <script>
+
 /* ---------------- SUPABASE ---------------- */
-const SUPABASE_URL = "https://xphczwydrcuvqsuthiii.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey = "YOUR_ANON_KEY_HERE";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ---------------- ELEMENTS ---------------- */
-const mainContainer = document.getElementById('mainContainer');
-const loginBox = document.getElementById('loginBox');
-const doctorLoginBox = document.getElementById('doctorLoginBox');
-const nursePage = document.getElementById('nursePage');
-const doctorPage = document.getElementById('doctorPage');
-const nurseList = document.getElementById('nurseList');
-const doctorList = document.getElementById('doctorList');
-
-const editBox = document.getElementById('editBox');
-const cancelBox = document.getElementById('cancelBox');
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 /* ---------------- UI ---------------- */
-function showMessage(text,error=false){
- let m=document.getElementById('message');
- m.innerText=text;
- m.style.background=error?'#e74c3c':'#2ecc71';
- m.style.display='block';
- setTimeout(()=>m.style.display='none',3000);
+function msg(text, err=false){
+const m=document.getElementById("msg");
+m.innerText=text;
+m.style.background=err?"#e74c3c":"#2ecc71";
+m.style.display="block";
+setTimeout(()=>m.style.display="none",3000);
 }
 
-function showEdit(){
- editBox.classList.remove('hidden');
- cancelBox.classList.add('hidden');
-}
+/* ---------------- GET VALUE ---------------- */
+const val = (id)=>document.getElementById(id).value.trim();
 
-function showCancel(){
- cancelBox.classList.remove('hidden');
- editBox.classList.add('hidden');
-}
-
-function showLogin(){
- loginBox.classList.remove('hidden');
-}
-
-function showDoctorLogin(){
- doctorLoginBox.classList.remove('hidden');
-}
-
-function goBack(){
- mainContainer.style.display='block';
- nursePage.classList.add('hidden');
- doctorPage.classList.add('hidden');
-}
-
-/* ---------------- LOAD ---------------- */
-let appointments=[];
-
-async function loadAppointments(){
-const {data,error}=await supabaseClient
-.from('appointments')
-.select('*')
-.order('date');
-
-if(error){
- showMessage('Database load error',true);
- console.error(error);
- return;
-}
-
-appointments=data||[];
-}
-
-/* ---------------- BOOK ---------------- */
-document.getElementById('appointmentForm').addEventListener('submit', async (e)=>{
+/* ---------------- SUBMIT ---------------- */
+document.getElementById("form").addEventListener("submit", async (e)=>{
 e.preventDefault();
 
-const appt={
-name:document.getElementById('name').value,
-dob:document.getElementById('dob').value,
-email:document.getElementById('email').value,
-date:document.getElementById('date').value,
-time:document.getElementById('time').value,
-doctor:document.getElementById('doctor').value,
-notes:''
+const appt = {
+name: val("name"),
+dob: val("dob"),
+email: val("email"),
+date: val("date"),
+time: val("time"),
+doctor: val("doctor"),
+notes: ""
 };
 
-if(Object.values(appt).some(v=>v==='')){
-showMessage('Please fill all fields',true);
+console.log("SEND:", appt);
+
+/* VALIDATION */
+for(let k in appt){
+if(!appt[k]){
+msg("Missing: " + k, true);
 return;
 }
+}
 
-const {error}=await supabaseClient
-.from('appointments')
+/* INSERT */
+const {error} = await client
+.from("appointments")
 .insert([appt]);
 
 if(error){
-showMessage('Could not save appointment',true);
-console.error(error);
+console.log(error);
+msg(error.message, true);
 return;
 }
 
-showMessage('Appointment booked!');
+msg("Appointment booked!");
 e.target.reset();
-await loadAppointments();
 });
 
-/* ---------------- LOGIN ---------------- */
-function login(){
-if(username.value==='nurse' && password.value==='1234'){
-mainContainer.style.display='none';
-loginBox.classList.add('hidden');
-nursePage.classList.remove('hidden');
-renderNurse();
-}else{
-showMessage('Invalid login',true);
-}
-}
-
-function doctorLogin(){
-const doc=document.getElementById('doctorSelect').value;
-const pass=document.getElementById('doctorPass').value;
-
-if(!doc || pass!=='1234'){
-showMessage('Invalid login',true);
-return;
-}
-
-mainContainer.style.display='none';
-doctorLoginBox.classList.add('hidden');
-doctorPage.classList.remove('hidden');
-renderDoctor(doc);
-}
-
-/* ---------------- RENDER ---------------- */
-async function renderNurse(){
-await loadAppointments();
-nurseList.innerHTML='';
-
-appointments.forEach(a=>{
-let row=document.createElement('div');
-row.className='row';
-
-row.innerHTML=`${a.name} - ${a.date} ${a.time}`;
-
-nurseList.appendChild(row);
-});
-}
-
-async function renderDoctor(doc){
-await loadAppointments();
-doctorList.innerHTML='';
-
-appointments.filter(a=>a.doctor===doc).forEach(a=>{
-let div=document.createElement('div');
-div.className='card';
-
-div.innerHTML=`
-<p>${a.name} — ${a.date} ${a.time}</p>
-<textarea id="note-${a.id}">${a.notes||''}</textarea>
-<button onclick="saveNote('${a.id}')">Save Notes</button>
-`;
-
-doctorList.appendChild(div);
-});
-}
-
-async function saveNote(id){
-const val=document.getElementById('note-'+id).value;
-
-await supabaseClient
-.from('appointments')
-.update({notes:val})
-.eq('id',id);
-
-showMessage('Notes saved');
-}
-
-/* ---------------- INIT ---------------- */
-loadAppointments();
 </script>
 
 </body>
