@@ -3,30 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <title>Appointment System</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {font-family:Arial;margin:0;background:#f4f6f9;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+body{font-family:Arial;margin:0;background:#f4f6f9;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;position:relative;}
+header button{position:absolute;top:15px;padding:8px 12px;}
+
 .container{max-width:700px;margin:20px auto;}
-.card{background:white;padding:20px;margin-bottom:20px;border-radius:10px;}
+.card{background:white;padding:20px;margin-bottom:15px;border-radius:10px;}
+
 label{display:block;margin-top:10px;font-weight:bold;}
-input,select{width:100%;padding:8px;margin-top:5px;}
+input,select{width:100%;padding:8px;margin-top:5px;box-sizing:border-box;}
+
 button{margin-top:10px;padding:10px;background:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;}
 button:hover{background:#2980b9;}
-#msg{position:fixed;top:10px;right:10px;padding:10px;color:white;display:none;border-radius:6px;}
+
 .hidden{display:none;}
+
+.row{display:flex;justify-content:space-between;background:#ecf0f1;padding:10px;margin:8px 0;border-radius:6px;}
+
+#msg{position:fixed;top:10px;right:10px;padding:10px;color:white;display:none;border-radius:6px;z-index:999;}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Appointment Scheduling</h2>
+<h2>Appointment System</h2>
+<button onclick="showDoctorLogin()" style="right:120px;">Doctor Login</button>
+<button onclick="showNurseLogin()" style="right:10px;">Nurse Login</button>
 </header>
 
-<div class="container">
+<div class="container" id="main">
 
+<!-- BOOK -->
 <div class="card">
 <h3>Book Appointment</h3>
 
@@ -39,7 +51,7 @@ button:hover{background:#2980b9;}
 <input id="dob" type="date">
 
 <label>Email</label>
-<input id="email" type="email">
+<input id="email">
 
 <label>Date</label>
 <input id="date" type="date">
@@ -49,7 +61,7 @@ button:hover{background:#2980b9;}
 
 <label>Doctor</label>
 <select id="doctor">
-<option value="">Select</option>
+<option value="">Select Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
@@ -58,6 +70,66 @@ button:hover{background:#2980b9;}
 </form>
 </div>
 
+<!-- EDIT -->
+<div class="card">
+<h3>Manage Appointment</h3>
+
+<button onclick="toggleEdit()">Edit</button>
+<button onclick="toggleCancel()">Cancel</button>
+
+<div id="editBox" class="hidden">
+<input id="editName" placeholder="Name">
+<input id="editDOB" type="date">
+<input id="newDate" type="date">
+<input id="newTime" type="time">
+<select id="newDoctor">
+<option value="">Doctor</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+<button onclick="editAppt()">Update</button>
+</div>
+
+<div id="cancelBox" class="hidden">
+<input id="cancelName" placeholder="Name">
+<input id="cancelDOB" type="date">
+<button onclick="cancelAppt()">Cancel</button>
+</div>
+
+</div>
+
+</div>
+
+<!-- LOGIN BOXES -->
+<div id="nurseLogin" class="hidden card">
+<h3>Nurse Login</h3>
+<input id="nurseUser" placeholder="Username">
+<input id="nursePass" type="password" placeholder="Password">
+<button onclick="nurseLogin()">Login</button>
+</div>
+
+<div id="doctorLogin" class="hidden card">
+<h3>Doctor Login</h3>
+<select id="doctorSelect">
+<option value="">Select Doctor</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+<input id="doctorPass" type="password" placeholder="Password">
+<button onclick="doctorLogin()">Login</button>
+</div>
+
+<!-- PAGES -->
+<div id="nursePage" class="hidden container">
+<h3>Nurse Dashboard</h3>
+<div id="nurseList"></div>
+<button onclick="back()">Back</button>
+</div>
+
+<div id="doctorPage" class="hidden container">
+<h3>Doctor Dashboard</h3>
+<div id="doctorList"></div>
+<button onclick="back()">Back</button>
 </div>
 
 <div id="msg"></div>
@@ -67,59 +139,180 @@ button:hover{background:#2980b9;}
 /* ---------------- SUPABASE ---------------- */
 const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
 const supabaseKey = "YOUR_ANON_KEY_HERE";
+const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+/* ---------------- HELPERS ---------------- */
+const get = (id)=>document.getElementById(id).value.trim();
 
-/* ---------------- UI ---------------- */
-function msg(text, err=false){
-const m=document.getElementById("msg");
-m.innerText=text;
+function msg(text,err=false){
+let m=document.getElementById("msg");
 m.style.background=err?"#e74c3c":"#2ecc71";
+m.innerText=text;
 m.style.display="block";
 setTimeout(()=>m.style.display="none",3000);
 }
 
-/* ---------------- GET VALUE ---------------- */
-const val = (id)=>document.getElementById(id).value.trim();
-
-/* ---------------- SUBMIT ---------------- */
+/* ---------------- BOOK ---------------- */
 document.getElementById("form").addEventListener("submit", async (e)=>{
 e.preventDefault();
 
-const appt = {
-name: val("name"),
-dob: val("dob"),
-email: val("email"),
-date: val("date"),
-time: val("time"),
-doctor: val("doctor"),
-notes: ""
+const appt={
+name:get("name"),
+dob:get("dob"),
+email:get("email"),
+date:get("date"),
+time:get("time"),
+doctor:get("doctor"),
+notes:""
 };
 
-console.log("SEND:", appt);
+console.log("APPT:",appt);
 
-/* VALIDATION */
 for(let k in appt){
 if(!appt[k]){
-msg("Missing: " + k, true);
+msg("Missing: "+k,true);
 return;
 }
 }
 
-/* INSERT */
-const {error} = await client
-.from("appointments")
-.insert([appt]);
+const {error}=await db.from("appointments").insert([appt]);
 
 if(error){
 console.log(error);
-msg(error.message, true);
+msg(error.message,true);
 return;
 }
 
-msg("Appointment booked!");
+msg("Booked!");
 e.target.reset();
 });
+
+/* ---------------- EDIT ---------------- */
+async function editAppt(){
+const name=get("editName");
+const dob=get("editDOB");
+
+const {data}=await db.from("appointments").select("*");
+
+let found=data.find(a=>a.name===name && a.dob===dob);
+
+if(!found){
+msg("Not found",true);
+return;
+}
+
+const updates={};
+if(get("newDate")) updates.date=get("newDate");
+if(get("newTime")) updates.time=get("newTime");
+if(get("newDoctor")) updates.doctor=get("newDoctor");
+
+await db.from("appointments").update(updates).eq("id",found.id);
+
+msg("Updated!");
+}
+
+/* ---------------- CANCEL ---------------- */
+async function cancelAppt(){
+const name=get("cancelName");
+const dob=get("cancelDOB");
+
+const {data}=await db.from("appointments").select("*");
+
+let found=data.find(a=>a.name===name && a.dob===dob);
+
+if(!found){
+msg("Not found",true);
+return;
+}
+
+await db.from("appointments").delete().eq("id",found.id);
+
+msg("Cancelled!");
+}
+
+/* ---------------- LOGIN ---------------- */
+function showNurseLogin(){
+document.getElementById("nurseLogin").classList.remove("hidden");
+}
+
+function showDoctorLogin(){
+document.getElementById("doctorLogin").classList.remove("hidden");
+}
+
+function nurseLogin(){
+if(nurseUser.value==="nurse" && nursePass.value==="1234"){
+document.getElementById("main").classList.add("hidden");
+document.getElementById("nurseLogin").classList.add("hidden");
+document.getElementById("nursePage").classList.remove("hidden");
+loadNurse();
+}else msg("Invalid",true);
+}
+
+function doctorLogin(){
+let doc=doctorSelect.value;
+if(!doc || doctorPass.value!=="1234"){
+msg("Invalid",true);
+return;
+}
+
+document.getElementById("main").classList.add("hidden");
+document.getElementById("doctorLogin").classList.add("hidden");
+document.getElementById("doctorPage").classList.remove("hidden");
+
+loadDoctor(doc);
+}
+
+/* ---------------- LOAD ---------------- */
+async function loadNurse(){
+const {data}=await db.from("appointments").select("*");
+
+nurseList.innerHTML="";
+data.forEach(a=>{
+let div=document.createElement("div");
+div.className="row";
+div.innerText=`${a.name} - ${a.date} ${a.time}`;
+nurseList.appendChild(div);
+});
+}
+
+async function loadDoctor(doc){
+const {data}=await db.from("appointments").select("*");
+
+doctorList.innerHTML="";
+
+data.filter(a=>a.doctor===doc).forEach(a=>{
+let div=document.createElement("div");
+div.className="card";
+div.innerHTML=`
+<p>${a.name} - ${a.date} ${a.time}</p>
+<textarea id="n${a.id}">${a.notes||""}</textarea>
+<button onclick="saveNote(${a.id})">Save</button>
+`;
+doctorList.appendChild(div);
+});
+}
+
+async function saveNote(id){
+let note=document.getElementById("n"+id).value;
+await db.from("appointments").update({notes:note}).eq("id",id);
+msg("Saved");
+}
+
+/* ---------------- NAV ---------------- */
+function back(){
+location.reload();
+}
+
+/* ---------------- TOGGLES ---------------- */
+function toggleEdit(){
+editBox.classList.toggle("hidden");
+cancelBox.classList.add("hidden");
+}
+
+function toggleCancel(){
+cancelBox.classList.toggle("hidden");
+editBox.classList.add("hidden");
+}
 
 </script>
 
