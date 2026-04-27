@@ -1,42 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Doctor</title>
+<meta charset="UTF-8">
+<title>Doctor Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<h1>Doctor Dashboard</h1>
+<h1>Doctor Portal</h1>
 <a href="index.html">Home</a>
 
+<!-- LOGIN -->
+<div id="loginBox">
+<h3>Doctor Login</h3>
 <select id="doc">
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
 
-<button onclick="load()">Load</button>
-
+<!-- DASHBOARD -->
+<div id="dash" style="display:none;">
+<h2>Schedule</h2>
 <div id="list"></div>
+</div>
 
 <script>
-const supabaseUrl="https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey="sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db=supabase.createClient(supabaseUrl,supabaseKey);
+const db=supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
+);
+
+let currentDoc="";
+
+function login(){
+if(pass.value!=="1234") return alert("Wrong password");
+
+currentDoc=doc.value;
+loginBox.style.display="none";
+dash.style.display="block";
+load();
+}
 
 async function load(){
-
-let doc=document.getElementById("doc").value;
-
 const {data}=await db.from("appointments").select("*");
 
-let filtered=data.filter(a=>a.doctor===doc);
-
-let list=document.getElementById("list");
 list.innerHTML="";
 
-filtered.forEach(a=>{
+data.filter(a=>a.doctor===currentDoc).forEach(a=>{
 let div=document.createElement("div");
 
 div.innerHTML=`
@@ -48,27 +63,10 @@ div.innerHTML=`
 list.appendChild(div);
 });
 }
-function doctorLogin(){
-let doc=doctorSelect.value;
-
-if(!doc || doctorPass.value!=="1234"){
-msg("Invalid login",true);
-return;
-}
-
-mainContainer.style.display="none";
-doctorLoginBox.style.display="none";
-doctorPage.style.display="block";
-loadDoctor(doc);
-}
 
 async function save(id){
 let note=document.getElementById("n"+id).value;
-
-await db.from("appointments")
-.update({notes:note})
-.eq("id",id);
-
+await db.from("appointments").update({notes:note}).eq("id",id);
 alert("Saved");
 }
 </script>
