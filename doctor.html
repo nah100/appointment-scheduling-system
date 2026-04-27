@@ -1,39 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <title>Doctor</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-body{font-family:'Segoe UI';background:#f4f6f9;margin:0;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.card{background:white;padding:15px;margin:10px;}
-textarea{width:100%;}
-</style>
 </head>
 
 <body>
 
-<header>
 <h1>Doctor Dashboard</h1>
 <a href="index.html">Home</a>
-<a href="nursing.html">Nurse</a>
-</header>
 
 <select id="doc">
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
+
 <button onclick="load()">Load</button>
 
 <div id="list"></div>
 
 <script>
-const SUPABASE_URL="https://xphczwydrcuvqsuthiii.supabase.co";
-const SUPABASE_KEY="YOUR_ANON_KEY_HERE";
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const supabaseUrl="https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey="sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+const db=supabase.createClient(supabaseUrl,supabaseKey);
 
 async function load(){
 
@@ -48,7 +38,6 @@ list.innerHTML="";
 
 filtered.forEach(a=>{
 let div=document.createElement("div");
-div.className="card";
 
 div.innerHTML=`
 <p>${a.name} - ${a.date} ${a.time}</p>
@@ -62,11 +51,14 @@ list.appendChild(div);
 
 async function save(id){
 let note=document.getElementById("n"+id).value;
-await db.from("appointments").update({notes:note}).eq("id",id);
+
+await db.from("appointments")
+.update({notes:note})
+.eq("id",id);
+
 alert("Saved");
 }
 </script>
 
 </body>
 </html>
-
