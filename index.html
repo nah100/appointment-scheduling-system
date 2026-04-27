@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointments</title>
+<title>Appointment System</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -12,7 +13,7 @@ header button{position:absolute;top:15px;padding:8px 15px;}
 .container{max-width:600px;margin:30px auto;}
 .card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.1);}
 input,select{width:100%;padding:10px;margin-top:5px;}
-button{padding:10px;margin-top:10px;border:none;background:#3498db;color:white;border-radius:6px;cursor:pointer;}
+button{padding:10px;margin-top:10px;background:#3498db;color:white;border:none;border-radius:6px;cursor:pointer;}
 
 #loginBox{display:none;position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;}
 </style>
@@ -46,39 +47,37 @@ button{padding:10px;margin-top:10px;border:none;background:#3498db;color:white;b
 </div>
 
 <div class="card">
-<h3>Edit / Cancel</h3>
-
-<input id="searchName" placeholder="Name">
-<input id="searchDob" type="date">
-
+<h3>Edit Appointment</h3>
+<input id="editName" placeholder="Name">
+<input id="editDOB" type="date">
 <input id="newDate" type="date">
 <input id="newTime" type="time">
-
 <button onclick="edit()">Edit</button>
+
+<h3>Cancel Appointment</h3>
+<input id="cancelName" placeholder="Name">
+<input id="cancelDOB" type="date">
 <button onclick="cancel()">Cancel</button>
-
 </div>
 
 </div>
 
-<!-- LOGIN -->
 <div id="loginBox">
-<h3 id="roleTitle"></h3>
-<input id="pass" type="password" placeholder="Password">
+<h3>Login</h3>
+<input id="pass" type="password">
 <button onclick="login()">Enter</button>
 </div>
 
 <script>
-const db = supabase.createClient(
-"https://xphczwydrcuvqsuthiii.supabase.co",
-"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
-);
+
+const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+const db = supabase.createClient(supabaseUrl, supabaseKey);
 
 let role="";
 
 function openLogin(r){
 role=r;
-roleTitle.innerText=r.toUpperCase()+" LOGIN";
 loginBox.style.display="block";
 }
 
@@ -88,7 +87,7 @@ location.href = role + ".html";
 }
 
 async function book(){
-await db.from("appointments").insert([{
+const {error}=await db.from("appointments").insert([{
 name:name.value,
 dob:dob.value,
 email:email.value,
@@ -97,29 +96,32 @@ time:time.value,
 doctor:doctor.value,
 notes:""
 }]);
-alert("Booked");
+
+if(error) alert(error.message);
+else alert("Booked");
 }
 
 async function edit(){
 const {data}=await db.from("appointments").select("*");
-let found=data.find(a=>a.name===searchName.value && a.dob===searchDob.value);
-if(!found) return alert("Not found");
+let f=data.find(a=>a.name===editName.value && a.dob===editDOB.value);
+if(!f) return alert("Not found");
 
 await db.from("appointments")
 .update({date:newDate.value,time:newTime.value})
-.eq("id",found.id);
+.eq("id",f.id);
 
 alert("Updated");
 }
 
 async function cancel(){
 const {data}=await db.from("appointments").select("*");
-let found=data.find(a=>a.name===searchName.value && a.dob===searchDob.value);
-if(!found) return alert("Not found");
+let f=data.find(a=>a.name===cancelName.value && a.dob===cancelDOB.value);
+if(!f) return alert("Not found");
 
-await db.from("appointments").delete().eq("id",found.id);
+await db.from("appointments").delete().eq("id",f.id);
 alert("Deleted");
 }
+
 </script>
 
 </body>
