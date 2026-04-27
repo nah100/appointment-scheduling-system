@@ -2,34 +2,72 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment System</title>
+<title>Appointment Scheduling System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
-
-header{
-background:#2c3e50;color:white;padding:15px;text-align:center;
+body {
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f6f9;
+    margin:0;
 }
 
-.container{max-width:600px;margin:30px auto;}
+header{
+ background:#2c3e50;
+ color:white;
+ padding:15px;
+ text-align:center;
+ position:relative;
+}
 
-.card{background:white;padding:20px;margin:10px;border-radius:10px;}
+header button{
+ position:absolute;
+ top:15px;
+ padding:8px 15px;
+}
 
-button{padding:10px;margin:5px;border:none;background:#3498db;color:white;border-radius:6px;cursor:pointer;}
+.container{
+ max-width:600px;
+ margin:30px auto;
+}
 
-input,select{width:100%;padding:8px;margin-top:5px;}
+.card{
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ margin-bottom:20px;
+ box-shadow:0px 4px 12px rgba(0,0,0,.1);
+}
 
-#loginModal{
-display:block;
-position:fixed;
-top:30%;
-left:40%;
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 5px 20px rgba(0,0,0,.3);
+input,select{
+ width:100%;
+ padding:10px;
+ margin-top:5px;
+ border-radius:6px;
+ border:1px solid #ccc;
+}
+
+button{
+ padding:12px;
+ margin-top:10px;
+ border:none;
+ border-radius:6px;
+ background:#3498db;
+ color:white;
+ cursor:pointer;
+}
+
+#loginBox{
+ display:none;
+ position:fixed;
+ top:30%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ box-shadow:0 4px 12px rgba(0,0,0,.3);
 }
 </style>
 </head>
@@ -37,30 +75,18 @@ box-shadow:0 5px 20px rgba(0,0,0,.3);
 <body>
 
 <header>
-<h1>Appointment System</h1>
+<h1>Appointment Scheduling System</h1>
+
+<button style="right:140px;" onclick="openLogin('nurse')">Nurse Login</button>
+<button style="right:20px;" onclick="openLogin('doctor')">Doctor Login</button>
 </header>
 
-<!-- LOGIN FIRST -->
-<div id="loginModal">
-<h3>Login</h3>
-
-<select id="role">
-<option value="">Select Role</option>
-<option value="nurse">Nurse</option>
-<option value="doctor">Doctor</option>
-</select>
-
-<input id="pass" type="password" placeholder="Password">
-
-<button onclick="login()">Enter</button>
-</div>
-
-<!-- HOME UI -->
-<div class="container" id="app" style="display:none;">
+<div class="container">
 
 <div class="card">
 <h2>Book Appointment</h2>
 
+<form id="form">
 <input id="name" placeholder="Name">
 <input id="dob" type="date">
 <input id="email" placeholder="Email">
@@ -68,55 +94,86 @@ box-shadow:0 5px 20px rgba(0,0,0,.3);
 <input id="time" type="time">
 
 <select id="doctor">
+<option value="">Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
 
-<button onclick="book()">Book</button>
+<button type="submit">Book</button>
+</form>
 </div>
 
-<div class="card">
-<button onclick="location.href='nursing.html'">Go to Nurse Page</button>
-<button onclick="location.href='doctor.html'">Go to Doctor Page</button>
 </div>
 
+<!-- LOGIN POPUP -->
+<div id="loginBox">
+<h3 id="loginTitle"></h3>
+
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()">Enter</button>
 </div>
 
 <script>
-const db=supabase.createClient(
+const db = supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
 
-function login(){
-let role=document.getElementById("role").value;
-let pass=document.getElementById("pass").value;
+let currentRole="";
 
-if(pass!=="1234"){
+function openLogin(role){
+currentRole = role;
+loginTitle.innerText = role.toUpperCase() + " LOGIN";
+loginBox.style.display="block";
+}
+
+function login(){
+if(pass.value !== "1234"){
 alert("Wrong password");
 return;
 }
 
-if(role==="nurse" || role==="doctor"){
-loginModal.style.display="none";
-app.style.display="block";
+if(currentRole === "nurse"){
+location.href="nursing.html";
+}
+
+if(currentRole === "doctor"){
+location.href="doctor.html";
 }
 }
 
-async function book(){
+/* BOOKING FIXED */
+document.getElementById("form").addEventListener("submit", async (e)=>{
+e.preventDefault();
 
-await db.from("appointments").insert([{
-name,
-dob,
-email,
-date,
-time,
-doctor,
+const appt = {
+name:name.value,
+dob:dob.value,
+email:email.value,
+date:date.value,
+time:time.value,
+doctor:doctor.value,
 notes:""
-}]);
+};
+
+for(let k in appt){
+if(!appt[k]){
+alert("Missing " + k);
+return;
+}
+}
+
+const { error } = await db.from("appointments").insert([appt]);
+
+if(error){
+alert(error.message);
+return;
+}
 
 alert("Booked!");
-}
+e.target.reset();
+});
 </script>
 
 </body>
