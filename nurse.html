@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Nurse</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+.container{max-width:700px;margin:20px auto;}
+.block{background:#eef4fa;padding:15px;margin-bottom:15px;border-radius:10px;}
+.item{background:white;padding:10px;margin:8px 0;border-radius:8px;cursor:pointer;}
+.modal{display:none;position:fixed;top:20%;left:50%;transform:translate(-50%);background:white;padding:20px;}
+</style>
+</head>
+
+<body>
+
+<header><h2>Nurse Schedule</h2></header>
+<div class="container" id="cal"></div>
+
+<div class="modal" id="modal">
+<div id="details"></div>
+<button onclick="closeM()">Close</button>
+<button onclick="deleteA()">Cancel Appointment</button>
+</div>
+
+<script>
+const db = supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
+);
+
+let selected=null;
+
+async function load(){
+const {data}=await db.from("appointments").select("*");
+
+data.sort((a,b)=>new Date(a.date+" "+a.time)-new Date(b.date+" "+b.time));
+
+let grouped={};
+
+data.forEach(a=>{
+if(!grouped[a.date]) grouped[a.date]=[];
+grouped[a.date].push(a);
+});
+
+cal.innerHTML="";
+
+for(let d in grouped){
+let block=document.createElement("div");
+block.className="block";
+block.innerHTML="<h3>"+d+"</h3>";
+
+grouped[d].forEach(a=>{
+let div=document.createElement("div");
+div.className="item";
+div.innerText=a.time+" - "+a.name;
+
+div.onclick=()=>{
+selected=a;
+details.innerHTML=`
+<b>${a.name}</b><br>
+${a.email}<br>
+${a.doctor}<br>
+Notes: ${a.notes || "none"}
+`;
+modal.style.display="block";
+};
+
+block.appendChild(div);
+});
+
+cal.appendChild(block);
+}
+}
+
+function closeM(){
+modal.style.display="none";
+}
+
+async function deleteA(){
+await db.from("appointments").delete().eq("id",selected.id);
+closeM();
+load();
+}
+
+load();
+</script>
+
+</body>
+</html>
