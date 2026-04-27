@@ -3,18 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <title>Appointment Scheduling System</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {font-family:'Segoe UI',sans-serif;background:#f4f6f9;margin:0;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;position:relative;}
-header button{position:absolute;top:15px;padding:8px 15px;}
-.container{max-width:600px;margin:30px auto;}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0px 4px 12px rgba(0,0,0,.1);}
-label{display:block;margin-top:10px;font-weight:bold;}
-input,select{width:100%;padding:10px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-button{padding:12px;margin-top:10px;border:none;border-radius:6px;background:#3498db;color:white;cursor:pointer;}
-#loginBox{display:none;position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+body {
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f6f9;
+    margin:0;
+}
+
+header{
+ background:#2c3e50;
+ color:white;
+ padding:15px;
+ text-align:center;
+ position:relative;
+}
+
+header button{
+ position:absolute;
+ top:15px;
+ padding:8px 15px;
+}
+
+.container{
+ max-width:600px;
+ margin:30px auto;
+}
+
+.card{
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ margin-bottom:20px;
+ box-shadow:0px 4px 12px rgba(0,0,0,.1);
+}
+
+label{
+ display:block;
+ margin-top:10px;
+ font-weight:bold;
+}
+
+input,select,textarea{
+ width:100%;
+ padding:10px;
+ margin-top:5px;
+ border-radius:6px;
+ border:1px solid #ccc;
+ box-sizing:border-box;
+}
+
+button{
+ padding:12px;
+ margin-top:10px;
+ border:none;
+ border-radius:6px;
+ background:#3498db;
+ color:white;
+ cursor:pointer;
+}
+
+#message{
+ position:fixed;
+ top:20px;
+ right:20px;
+ color:white;
+ padding:15px;
+ border-radius:8px;
+ display:none;
+ z-index:999;
+}
+
+#loginBox{
+ display:none;
+ position:fixed;
+ top:30%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ box-shadow:0 4px 12px rgba(0,0,0,.2);
+ z-index:999;
+}
 </style>
 </head>
 
@@ -22,6 +95,7 @@ button{padding:12px;margin-top:10px;border:none;border-radius:6px;background:#34
 
 <header>
 <h1>Appointment Scheduling System</h1>
+
 <button style="right:130px;" onclick="openLogin('doctor')">Doctor Login</button>
 <button style="right:20px;" onclick="openLogin('nurse')">Nurse Login</button>
 </header>
@@ -32,71 +106,113 @@ button{padding:12px;margin-top:10px;border:none;border-radius:6px;background:#34
 <h2>Book Appointment</h2>
 
 <form id="form">
-<input id="name" placeholder="Name">
+
+<label>Name</label>
+<input id="name" type="text">
+
+<label>Date of Birth</label>
 <input id="dob" type="date">
-<input id="email" placeholder="Email">
+
+<label>Email</label>
+<input id="email" type="email">
+
+<label>Appointment Date</label>
 <input id="date" type="date">
+
+<label>Time</label>
 <input id="time" type="time">
 
+<label>Doctor</label>
 <select id="doctor">
 <option value="">Choose Doctor</option>
-<option>Dr. Smith</option>
-<option>Dr. Brown</option>
+<option value="Dr. Smith">Dr. Smith</option>
+<option value="Dr. Brown">Dr. Brown</option>
 </select>
 
 <button type="submit">Book Appointment</button>
+
 </form>
-
-</div>
 </div>
 
-<!-- LOGIN -->
+</div>
+
+<!-- LOGIN POPUP -->
 <div id="loginBox">
 <h3 id="title"></h3>
+
 <input id="pass" type="password" placeholder="Password">
+
 <button onclick="login()">Login</button>
 </div>
 
 <script>
+
+/* ================= SUPABASE ================= */
 const db = supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
 
-let role="";
+/* ================= ELEMENTS ================= */
+const loginBox = document.getElementById("loginBox");
+const title = document.getElementById("title");
+const pass = document.getElementById("pass");
+const form = document.getElementById("form");
+
+/* ================= LOGIN ================= */
+let role = "";
 
 function openLogin(r){
-role=r;
-title.innerText=r.toUpperCase()+" LOGIN";
-loginBox.style.display="block";
+role = r;
+title.innerText = r.toUpperCase() + " LOGIN";
+loginBox.style.display = "block";
 }
 
 function login(){
-if(pass.value!=="1234"){alert("Wrong password");return;}
-
-if(role==="nurse") location.href="nurse.html";
-if(role==="doctor") location.href="doctor.html";
+if(pass.value !== "1234"){
+alert("Wrong password");
+return;
 }
 
-document.getElementById("form").addEventListener("submit", async (e)=>{
+if(role === "nurse") location.href = "nurse.html";
+if(role === "doctor") location.href = "doctor.html";
+}
+
+/* ================= BOOKING ================= */
+form.addEventListener("submit", async (e)=>{
 e.preventDefault();
 
-const appt={
-name:name.value,
-dob:dob.value,
-email:email.value,
-date:date.value,
-time:time.value,
-doctor:doctor.value,
-notes:""
+const appt = {
+name: document.getElementById("name").value,
+dob: document.getElementById("dob").value,
+email: document.getElementById("email").value,
+date: document.getElementById("date").value,
+time: document.getElementById("time").value,
+doctor: document.getElementById("doctor").value,
+notes: ""
 };
 
-await db.from("appointments").insert([appt]);
+/* validation */
+for(let key in appt){
+if(appt[key] === ""){
+alert("Missing: " + key);
+return;
+}
+}
 
-alert("Booked!");
-e.target.reset();
+const { error } = await db.from("appointments").insert([appt]);
+
+if(error){
+alert(error.message);
+return;
+}
+
+alert("Appointment Booked!");
+form.reset();
 });
+
 </script>
 
 </body>
 </html>
+
