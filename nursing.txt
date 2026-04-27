@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Nurse Dashboard</title>
+<style>
+.day{background:#eee;margin:10px;padding:10px;border-radius:8px;}
+.item{background:white;margin:5px;padding:8px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h1>Nurse Schedule</h1>
+<a href="home.html">Home</a>
+
+<div id="calendar"></div>
+
+<div id="modal" style="display:none;background:white;position:fixed;top:20%;left:30%;padding:20px;">
+<div id="details"></div>
+<button onclick="closeModal()">Close</button>
+</div>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey = "YOUR_ANON_KEY";
+const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function load(){
+
+const {data}=await db.from("appointments").select("*");
+
+data.sort((a,b)=>new Date(a.date+" "+a.time)-new Date(b.date+" "+b.time));
+
+let grouped={};
+
+data.forEach(a=>{
+if(!grouped[a.date]) grouped[a.date]=[];
+grouped[a.date].push(a);
+});
+
+let cal=document.getElementById("calendar");
+cal.innerHTML="";
+
+for(let day in grouped){
+
+let div=document.createElement("div");
+div.className="day";
+div.innerHTML="<h3>"+day+"</h3>";
+
+grouped[day].forEach(a=>{
+let item=document.createElement("div");
+item.className="item";
+item.innerText=a.time+" - "+a.name;
+
+item.onclick=()=>show(a);
+
+div.appendChild(item);
+});
+
+cal.appendChild(div);
+}
+}
+
+function show(a){
+document.getElementById("details").innerHTML=`
+<b>Name:</b> ${a.name}<br>
+<b>DOB:</b> ${a.dob}<br>
+<b>Email:</b> ${a.email}<br>
+<b>Date:</b> ${a.date}<br>
+<b>Time:</b> ${a.time}<br>
+<b>Doctor:</b> ${a.doctor}<br>
+<b>Notes:</b> ${a.notes || ""}
+`;
+
+document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+document.getElementById("modal").style.display="none";
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Doctor Dashboard</title>
+</head>
+<body>
+
+<h1>Doctor Schedule</h1>
+<a href="home.html">Home</a>
+
+<select id="docSelect">
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+
+<button onclick="load()">Load</button>
+
+<div id="list"></div>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function load(){
+
+let doc=document.getElementById("docSelect").value;
+
+const {data}=await db.from("appointments").select("*");
+
+let filtered=data.filter(a=>a.doctor===doc);
+
+let list=document.getElementById("list");
+list.innerHTML="";
+
+filtered.forEach(a=>{
+let div=document.createElement("div");
+div.innerHTML=`
+<p>${a.name} - ${a.date} ${a.time}</p>
+<textarea id="n${a.id}">${a.notes||""}</textarea>
+<button onclick="save(${a.id})">Save</button>
+`;
+list.appendChild(div);
+});
+}
+
+async function save(id){
+let note=document.getElementById("n"+id).value;
+
+await db.from("appointments")
+.update({notes:note})
+.eq("id",id);
+
+alert("Saved");
+}
+</script>
+
+</body>
+</html>
