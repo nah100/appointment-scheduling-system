@@ -2,57 +2,23 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Nurse Dashboard</title>
+<title>Nurse</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.dayBlock{background:#eef4fa;margin:10px;padding:10px;border-radius:10px;}
-.item{background:white;margin:5px;padding:10px;cursor:pointer;border-left:5px solid #3498db;}
-#loginBox{position:fixed;top:30%;left:40%;background:white;padding:20px;border-radius:10px;}
-#modal{display:none;position:fixed;top:20%;left:30%;background:white;padding:20px;}
-</style>
 </head>
 
 <body>
 
-<header>
-<h1>Nurse Portal</h1>
+<h1>Nurse Schedule</h1>
 <a href="index.html">Home</a>
-</header>
 
-<!-- LOGIN -->
-<div id="loginBox">
-<h3>Nurse Login</h3>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
-<!-- CALENDAR -->
-<div id="calendar" style="display:none;"></div>
-
-<!-- MODAL -->
-<div id="modal">
-<div id="details"></div>
-<button onclick="closeModal()">Close</button>
-</div>
+<div id="calendar"></div>
 
 <script>
 const db=supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
-
-function login(){
-if(user.value==="nurse" && pass.value==="1234"){
-loginBox.style.display="none";
-calendar.style.display="block";
-load();
-}else alert("Invalid login");
-}
 
 async function load(){
 const {data}=await db.from("appointments").select("*");
@@ -68,38 +34,20 @@ grouped[a.date].push(a);
 calendar.innerHTML="";
 
 for(let day in grouped){
-let block=document.createElement("div");
-block.className="dayBlock";
-block.innerHTML="<h3>"+day+"</h3>";
+let div=document.createElement("div");
+div.innerHTML="<h3>"+day+"</h3>";
 
 grouped[day].forEach(a=>{
-let div=document.createElement("div");
-div.className="item";
-div.innerText=a.time+" - "+a.name;
-div.onclick=()=>show(a);
-block.appendChild(div);
+let item=document.createElement("div");
+item.innerText=a.time+" - "+a.name;
+div.appendChild(item);
 });
 
-calendar.appendChild(block);
+calendar.appendChild(div);
 }
 }
 
-function show(a){
-details.innerHTML=`
-<b>Name:</b> ${a.name}<br>
-<b>DOB:</b> ${a.dob}<br>
-<b>Email:</b> ${a.email}<br>
-<b>Date:</b> ${a.date}<br>
-<b>Time:</b> ${a.time}<br>
-<b>Doctor:</b> ${a.doctor}<br>
-<b>Notes:</b> ${a.notes||""}
-`;
-modal.style.display="block";
-}
-
-function closeModal(){
-modal.style.display="none";
-}
+load();
 </script>
 
 </body>
