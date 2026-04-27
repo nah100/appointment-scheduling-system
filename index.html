@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -112,8 +112,8 @@ button{
 <div class="card">
 <h2>Manage Appointment</h2>
 
-<button onclick="toggleEdit()">Edit</button>
-<button onclick="toggleCancel()">Cancel</button>
+<button onclick="toggleEdit()">Edit Appointment</button>
+<button onclick="toggleCancel()">Cancel Appointment</button>
 
 <div id="editBox" style="display:none;">
 <input id="editName" placeholder="Name">
@@ -134,7 +134,6 @@ button{
 </div>
 
 </div>
-
 </div>
 
 <script>
@@ -144,7 +143,6 @@ const db=supabase.createClient(supabaseUrl,supabaseKey);
 
 const get=id=>document.getElementById(id).value.trim();
 
-/* BOOK */
 document.getElementById("appointmentForm").addEventListener("submit",async(e)=>{
 e.preventDefault();
 
@@ -163,7 +161,6 @@ if(!appt[k]) return alert("Missing "+k);
 }
 
 await db.from("appointments").insert([appt]);
-
 alert("Booked!");
 });
 
@@ -209,4 +206,3 @@ editBox.style.display="none";
 
 </body>
 </html>
-
