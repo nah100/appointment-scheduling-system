@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Home</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body {font-family:'Segoe UI',sans-serif;background:#f4f6f9;margin:0;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+.container{max-width:600px;margin:30px auto;}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
+label{display:block;margin-top:10px;font-weight:bold;}
+input,select{width:100%;padding:10px;margin-top:5px;}
+button{padding:12px;background:#3498db;color:white;border:none;margin-top:10px;}
+a{margin:10px;color:white;}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Appointment System</h1>
+<a href="nursing.html">Nurse</a>
+<a href="doctor.html">Doctor</a>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Book Appointment</h2>
+
+<form id="form">
+<input id="name" placeholder="Name">
+<input id="dob" type="date">
+<input id="email" placeholder="Email">
+<input id="date" type="date">
+<input id="time" type="time">
+
+<select id="doctor">
+<option value="">Doctor</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
+</select>
+
+<button type="submit">Book</button>
+</form>
+
+<div id="msg"></div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL="https://xphczwydrcuvqsuthiii.supabase.co";
+const SUPABASE_KEY="YOUR_ANON_KEY_HERE";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const get=id=>document.getElementById(id).value.trim();
+
+document.getElementById("form").addEventListener("submit",async(e)=>{
+e.preventDefault();
+
+const appt={
+name:get("name"),
+dob:get("dob"),
+email:get("email"),
+date:get("date"),
+time:get("time"),
+doctor:get("doctor"),
+notes:""
+};
+
+for(let k in appt){
+if(!appt[k]) return msg("Missing: "+k);
+}
+
+const {error}=await db.from("appointments").insert([appt]);
+
+if(error) return msg(error.message);
+
+msg("Booked!");
+e.target.reset();
+});
+
+function msg(t){
+document.getElementById("msg").innerText=t;
+}
+</script>
+
+</body>
+</html>

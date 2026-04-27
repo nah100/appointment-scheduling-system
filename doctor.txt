@@ -1,32 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Doctor Dashboard</title>
+<meta charset="UTF-8">
+<title>Doctor</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{font-family:'Segoe UI';background:#f4f6f9;margin:0;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+.card{background:white;padding:15px;margin:10px;}
+textarea{width:100%;}
+</style>
 </head>
+
 <body>
 
-<h1>Doctor Schedule</h1>
-<a href="home.html">Home</a>
+<header>
+<h1>Doctor Dashboard</h1>
+<a href="index.html">Home</a>
+<a href="nursing.html">Nurse</a>
+</header>
 
-<select id="docSelect">
+<select id="doc">
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-
 <button onclick="load()">Load</button>
 
 <div id="list"></div>
 
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db = supabase.createClient(supabaseUrl, supabaseKey);
+const SUPABASE_URL="https://xphczwydrcuvqsuthiii.supabase.co";
+const SUPABASE_KEY="YOUR_ANON_KEY_HERE";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 async function load(){
 
-let doc=document.getElementById("docSelect").value;
+let doc=document.getElementById("doc").value;
 
 const {data}=await db.from("appointments").select("*");
 
@@ -37,25 +48,25 @@ list.innerHTML="";
 
 filtered.forEach(a=>{
 let div=document.createElement("div");
+div.className="card";
+
 div.innerHTML=`
 <p>${a.name} - ${a.date} ${a.time}</p>
 <textarea id="n${a.id}">${a.notes||""}</textarea>
 <button onclick="save(${a.id})">Save</button>
 `;
+
 list.appendChild(div);
 });
 }
 
 async function save(id){
 let note=document.getElementById("n"+id).value;
-
-await db.from("appointments")
-.update({notes:note})
-.eq("id",id);
-
+await db.from("appointments").update({notes:note}).eq("id",id);
 alert("Saved");
 }
 </script>
 
 </body>
 </html>
+
