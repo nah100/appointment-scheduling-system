@@ -80,6 +80,16 @@ document.getElementById("details").innerHTML=`
 
 document.getElementById("modal").style.display="block";
 }
+function login(){
+if(username.value==="nurse" && password.value==="1234"){
+mainContainer.style.display="none";
+loginBox.style.display="none";
+nursePage.style.display="block";
+loadCalendar();
+}else{
+msg("Invalid login",true);
+}
+}
 
 function closeModal(){
 document.getElementById("modal").style.display="none";
