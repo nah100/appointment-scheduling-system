@@ -2,32 +2,24 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Doctor Dashboard</title>
+<title>Doctor</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<h1>Doctor Portal</h1>
+<h1>Doctor Dashboard</h1>
 <a href="index.html">Home</a>
 
-<!-- LOGIN -->
-<div id="loginBox">
-<h3>Doctor Login</h3>
 <select id="doc">
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
 
-<!-- DASHBOARD -->
-<div id="dash" style="display:none;">
-<h2>Schedule</h2>
+<button onclick="load()">Load</button>
+
 <div id="list"></div>
-</div>
 
 <script>
 const db=supabase.createClient(
@@ -35,23 +27,15 @@ const db=supabase.createClient(
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
 
-let currentDoc="";
-
-function login(){
-if(pass.value!=="1234") return alert("Wrong password");
-
-currentDoc=doc.value;
-loginBox.style.display="none";
-dash.style.display="block";
-load();
-}
-
 async function load(){
+
+let doc=document.getElementById("doc").value;
+
 const {data}=await db.from("appointments").select("*");
 
 list.innerHTML="";
 
-data.filter(a=>a.doctor===currentDoc).forEach(a=>{
+data.filter(a=>a.doctor===doc).forEach(a=>{
 let div=document.createElement("div");
 
 div.innerHTML=`
@@ -66,7 +50,9 @@ list.appendChild(div);
 
 async function save(id){
 let note=document.getElementById("n"+id).value;
+
 await db.from("appointments").update({notes:note}).eq("id",id);
+
 alert("Saved");
 }
 </script>
