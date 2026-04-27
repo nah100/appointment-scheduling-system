@@ -2,217 +2,125 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment Scheduling System</title>
-
+<title>Appointments</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {
-    font-family:'Segoe UI',sans-serif;
-    background:#f4f6f9;
-    margin:0;
-}
+body{font-family:'Segoe UI';background:#f4f6f9;margin:0;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;position:relative;}
+header button{position:absolute;top:15px;padding:8px 15px;}
+.container{max-width:600px;margin:30px auto;}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+input,select{width:100%;padding:10px;margin-top:5px;}
+button{padding:10px;margin-top:10px;border:none;background:#3498db;color:white;border-radius:6px;cursor:pointer;}
 
-header{
- background:#2c3e50;
- color:white;
- padding:15px;
- text-align:center;
- position:relative;
-}
-
-header button{
- position:absolute;
- top:15px;
- padding:8px 15px;
-}
-
-.container{
- max-width:600px;
- margin:30px auto;
-}
-
-.card{
- background:white;
- padding:20px;
- border-radius:10px;
- margin-bottom:20px;
- box-shadow:0px 4px 12px rgba(0,0,0,.1);
-}
-
-label{
- display:block;
- margin-top:10px;
- font-weight:bold;
-}
-
-input,select,textarea{
- width:100%;
- padding:10px;
- margin-top:5px;
- border-radius:6px;
- border:1px solid #ccc;
- box-sizing:border-box;
-}
-
-button{
- padding:12px;
- margin-top:10px;
- border:none;
- border-radius:6px;
- background:#3498db;
- color:white;
- cursor:pointer;
-}
-
-#message{
- position:fixed;
- top:20px;
- right:20px;
- color:white;
- padding:15px;
- border-radius:8px;
- display:none;
- z-index:999;
-}
-
-#loginBox{
- display:none;
- position:fixed;
- top:30%;
- left:50%;
- transform:translate(-50%,-50%);
- background:white;
- padding:20px;
- border-radius:10px;
- box-shadow:0 4px 12px rgba(0,0,0,.2);
- z-index:999;
-}
+#loginBox{display:none;position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>Appointment Scheduling System</h1>
-
-<button style="right:130px;" onclick="openLogin('doctor')">Doctor Login</button>
-<button style="right:20px;" onclick="openLogin('nurse')">Nurse Login</button>
+<h2>Appointments</h2>
+<button style="right:120px;" onclick="openLogin('nurse')">Nurse Login</button>
+<button style="right:20px;" onclick="openLogin('doctor')">Doctor Login</button>
 </header>
 
 <div class="container">
 
 <div class="card">
-<h2>Book Appointment</h2>
+<h3>Book Appointment</h3>
 
-<form id="form">
-
-<label>Name</label>
-<input id="name" type="text">
-
-<label>Date of Birth</label>
+<input id="name" placeholder="Name">
 <input id="dob" type="date">
-
-<label>Email</label>
-<input id="email" type="email">
-
-<label>Appointment Date</label>
+<input id="email" placeholder="Email">
 <input id="date" type="date">
-
-<label>Time</label>
 <input id="time" type="time">
 
-<label>Doctor</label>
 <select id="doctor">
-<option value="">Choose Doctor</option>
-<option value="Dr. Smith">Dr. Smith</option>
-<option value="Dr. Brown">Dr. Brown</option>
+<option>Dr. Smith</option>
+<option>Dr. Brown</option>
 </select>
 
-<button type="submit">Book Appointment</button>
+<button onclick="book()">Book</button>
+</div>
 
-</form>
+<div class="card">
+<h3>Edit / Cancel</h3>
+
+<input id="searchName" placeholder="Name">
+<input id="searchDob" type="date">
+
+<input id="newDate" type="date">
+<input id="newTime" type="time">
+
+<button onclick="edit()">Edit</button>
+<button onclick="cancel()">Cancel</button>
+
 </div>
 
 </div>
 
-<!-- LOGIN POPUP -->
+<!-- LOGIN -->
 <div id="loginBox">
-<h3 id="title"></h3>
-
+<h3 id="roleTitle"></h3>
 <input id="pass" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
+<button onclick="login()">Enter</button>
 </div>
 
 <script>
-
-/* ================= SUPABASE ================= */
 const db = supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
 
-/* ================= ELEMENTS ================= */
-const loginBox = document.getElementById("loginBox");
-const title = document.getElementById("title");
-const pass = document.getElementById("pass");
-const form = document.getElementById("form");
-
-/* ================= LOGIN ================= */
-let role = "";
+let role="";
 
 function openLogin(r){
-role = r;
-title.innerText = r.toUpperCase() + " LOGIN";
-loginBox.style.display = "block";
+role=r;
+roleTitle.innerText=r.toUpperCase()+" LOGIN";
+loginBox.style.display="block";
 }
 
 function login(){
-if(pass.value !== "1234"){
-alert("Wrong password");
-return;
+if(pass.value!=="1234") return alert("Wrong password");
+location.href = role + ".html";
 }
 
-if(role === "nurse") location.href = "nurse.html";
-if(role === "doctor") location.href = "doctor.html";
+async function book(){
+await db.from("appointments").insert([{
+name:name.value,
+dob:dob.value,
+email:email.value,
+date:date.value,
+time:time.value,
+doctor:doctor.value,
+notes:""
+}]);
+alert("Booked");
 }
 
-/* ================= BOOKING ================= */
-form.addEventListener("submit", async (e)=>{
-e.preventDefault();
+async function edit(){
+const {data}=await db.from("appointments").select("*");
+let found=data.find(a=>a.name===searchName.value && a.dob===searchDob.value);
+if(!found) return alert("Not found");
 
-const appt = {
-name: document.getElementById("name").value,
-dob: document.getElementById("dob").value,
-email: document.getElementById("email").value,
-date: document.getElementById("date").value,
-time: document.getElementById("time").value,
-doctor: document.getElementById("doctor").value,
-notes: ""
-};
+await db.from("appointments")
+.update({date:newDate.value,time:newTime.value})
+.eq("id",found.id);
 
-/* validation */
-for(let key in appt){
-if(appt[key] === ""){
-alert("Missing: " + key);
-return;
-}
+alert("Updated");
 }
 
-const { error } = await db.from("appointments").insert([appt]);
+async function cancel(){
+const {data}=await db.from("appointments").select("*");
+let found=data.find(a=>a.name===searchName.value && a.dob===searchDob.value);
+if(!found) return alert("Not found");
 
-if(error){
-alert(error.message);
-return;
+await db.from("appointments").delete().eq("id",found.id);
+alert("Deleted");
 }
-
-alert("Appointment Booked!");
-form.reset();
-});
-
 </script>
 
 </body>
 </html>
-
