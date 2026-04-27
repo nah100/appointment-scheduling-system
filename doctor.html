@@ -48,6 +48,19 @@ div.innerHTML=`
 list.appendChild(div);
 });
 }
+function doctorLogin(){
+let doc=doctorSelect.value;
+
+if(!doc || doctorPass.value!=="1234"){
+msg("Invalid login",true);
+return;
+}
+
+mainContainer.style.display="none";
+doctorLoginBox.style.display="none";
+doctorPage.style.display="block";
+loadDoctor(doc);
+}
 
 async function save(id){
 let note=document.getElementById("n"+id).value;
