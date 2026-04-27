@@ -1,74 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Nurse Schedule</title>
+<meta charset="UTF-8">
+<title>Nurse Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
 header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.day{background:#eef4fa;margin:10px;padding:10px;border-radius:10px;}
+.dayBlock{background:#eef4fa;margin:10px;padding:10px;border-radius:10px;}
 .item{background:white;margin:5px;padding:10px;cursor:pointer;border-left:5px solid #3498db;}
-.modal{display:none;position:fixed;top:20%;left:30%;background:white;padding:20px;}
+#loginBox{position:fixed;top:30%;left:40%;background:white;padding:20px;border-radius:10px;}
+#modal{display:none;position:fixed;top:20%;left:30%;background:white;padding:20px;}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>Nurse Schedule</h1>
+<h1>Nurse Portal</h1>
 <a href="index.html">Home</a>
 </header>
 
-<div id="calendar"></div>
+<!-- LOGIN -->
+<div id="loginBox">
+<h3>Nurse Login</h3>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
 
-<div id="modal" class="modal">
+<!-- CALENDAR -->
+<div id="calendar" style="display:none;"></div>
+
+<!-- MODAL -->
+<div id="modal">
 <div id="details"></div>
 <button onclick="closeModal()">Close</button>
 </div>
 
 <script>
-const supabaseUrl="https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey="sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db=supabase.createClient(supabaseUrl,supabaseKey);
+const db=supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
+);
+
+function login(){
+if(user.value==="nurse" && pass.value==="1234"){
+loginBox.style.display="none";
+calendar.style.display="block";
+load();
+}else alert("Invalid login");
+}
 
 async function load(){
-
 const {data}=await db.from("appointments").select("*");
 
 data.sort((a,b)=>new Date(a.date+" "+a.time)-new Date(b.date+" "+b.time));
 
 let grouped={};
-
 data.forEach(a=>{
 if(!grouped[a.date]) grouped[a.date]=[];
 grouped[a.date].push(a);
 });
 
-let cal=document.getElementById("calendar");
-cal.innerHTML="";
+calendar.innerHTML="";
 
 for(let day in grouped){
-
-let div=document.createElement("div");
-div.className="day";
-div.innerHTML="<h3>"+day+"</h3>";
+let block=document.createElement("div");
+block.className="dayBlock";
+block.innerHTML="<h3>"+day+"</h3>";
 
 grouped[day].forEach(a=>{
-let item=document.createElement("div");
-item.className="item";
-item.innerText=a.time+" - "+a.name;
-item.onclick=()=>show(a);
-div.appendChild(item);
+let div=document.createElement("div");
+div.className="item";
+div.innerText=a.time+" - "+a.name;
+div.onclick=()=>show(a);
+block.appendChild(div);
 });
 
-cal.appendChild(div);
+calendar.appendChild(block);
 }
 }
 
 function show(a){
-document.getElementById("details").innerHTML=`
+details.innerHTML=`
 <b>Name:</b> ${a.name}<br>
 <b>DOB:</b> ${a.dob}<br>
 <b>Email:</b> ${a.email}<br>
@@ -77,25 +94,12 @@ document.getElementById("details").innerHTML=`
 <b>Doctor:</b> ${a.doctor}<br>
 <b>Notes:</b> ${a.notes||""}
 `;
-
-document.getElementById("modal").style.display="block";
-}
-function login(){
-if(username.value==="nurse" && password.value==="1234"){
-mainContainer.style.display="none";
-loginBox.style.display="none";
-nursePage.style.display="block";
-loadCalendar();
-}else{
-msg("Invalid login",true);
-}
+modal.style.display="block";
 }
 
 function closeModal(){
-document.getElementById("modal").style.display="none";
+modal.style.display="none";
 }
-
-load();
 </script>
 
 </body>
