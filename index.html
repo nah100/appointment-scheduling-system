@@ -1,68 +1,35 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment Scheduling System</title>
+<title>Appointment System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {
-    font-family:'Segoe UI',sans-serif;
-    background:#f4f6f9;
-    margin:0;
-}
+body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
 
 header{
- background:#2c3e50;
- color:white;
- padding:15px;
- text-align:center;
- position:relative;
+background:#2c3e50;color:white;padding:15px;text-align:center;
 }
 
-header button{
- position:absolute;
- top:15px;
- padding:8px 15px;
-}
+.container{max-width:600px;margin:30px auto;}
 
-.container{
- max-width:600px;
- margin:30px auto;
-}
+.card{background:white;padding:20px;margin:10px;border-radius:10px;}
 
-.card{
- background:white;
- padding:20px;
- border-radius:10px;
- margin-bottom:20px;
- box-shadow:0px 4px 12px rgba(0,0,0,.1);
-}
+button{padding:10px;margin:5px;border:none;background:#3498db;color:white;border-radius:6px;cursor:pointer;}
 
-label{
- display:block;
- margin-top:10px;
- font-weight:bold;
-}
+input,select{width:100%;padding:8px;margin-top:5px;}
 
-input,select,textarea{
- width:100%;
- padding:10px;
- margin-top:5px;
- border-radius:6px;
- border:1px solid #ccc;
- box-sizing:border-box;
-}
-
-button{
- padding:12px;
- margin-top:10px;
- border:none;
- border-radius:6px;
- background:#3498db;
- color:white;
- cursor:pointer;
+#loginModal{
+display:block;
+position:fixed;
+top:30%;
+left:40%;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,.3);
 }
 </style>
 </head>
@@ -70,137 +37,85 @@ button{
 <body>
 
 <header>
-<h1>Appointment Scheduling System</h1>
-
-<button onclick="location.href='nursing.html'" style="right:130px;">Nurse Login</button>
-<button onclick="location.href='doctor.html'" style="right:20px;">Doctor Login</button>
+<h1>Appointment System</h1>
 </header>
 
-<div class="container">
+<!-- LOGIN FIRST -->
+<div id="loginModal">
+<h3>Login</h3>
+
+<select id="role">
+<option value="">Select Role</option>
+<option value="nurse">Nurse</option>
+<option value="doctor">Doctor</option>
+</select>
+
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()">Enter</button>
+</div>
+
+<!-- HOME UI -->
+<div class="container" id="app" style="display:none;">
 
 <div class="card">
 <h2>Book Appointment</h2>
 
-<form id="appointmentForm">
-
-<label>Name</label>
-<input id="name">
-
-<label>Date of Birth</label>
+<input id="name" placeholder="Name">
 <input id="dob" type="date">
-
-<label>Email</label>
-<input id="email">
-
-<label>Appointment Date</label>
+<input id="email" placeholder="Email">
 <input id="date" type="date">
-
-<label>Time</label>
 <input id="time" type="time">
 
-<label>Doctor</label>
 <select id="doctor">
-<option value="">Choose Doctor</option>
-<option value="Dr. Smith">Dr. Smith</option>
-<option value="Dr. Brown">Dr. Brown</option>
-</select>
-
-<button type="submit">Book Appointment</button>
-</form>
-</div>
-
-<div class="card">
-<h2>Manage Appointment</h2>
-
-<button onclick="toggleEdit()">Edit Appointment</button>
-<button onclick="toggleCancel()">Cancel Appointment</button>
-
-<div id="editBox" style="display:none;">
-<input id="editName" placeholder="Name">
-<input id="editDOB" type="date">
-<input id="newDate" type="date">
-<input id="newTime" type="time">
-<select id="newDoctor">
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-<button onclick="editAppointment()">Update</button>
+
+<button onclick="book()">Book</button>
 </div>
 
-<div id="cancelBox" style="display:none;">
-<input id="cancelName" placeholder="Name">
-<input id="cancelDOB" type="date">
-<button onclick="cancelAppointment()">Cancel</button>
+<div class="card">
+<button onclick="location.href='nursing.html'">Go to Nurse Page</button>
+<button onclick="location.href='doctor.html'">Go to Doctor Page</button>
 </div>
 
-</div>
 </div>
 
 <script>
-const supabaseUrl="https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey="sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db=supabase.createClient(supabaseUrl,supabaseKey);
+const db=supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
+);
 
-const get=id=>document.getElementById(id).value.trim();
+function login(){
+let role=document.getElementById("role").value;
+let pass=document.getElementById("pass").value;
 
-document.getElementById("appointmentForm").addEventListener("submit",async(e)=>{
-e.preventDefault();
+if(pass!=="1234"){
+alert("Wrong password");
+return;
+}
 
-const appt={
-name:get("name"),
-dob:get("dob"),
-email:get("email"),
-date:get("date"),
-time:get("time"),
-doctor:get("doctor"),
+if(role==="nurse" || role==="doctor"){
+loginModal.style.display="none";
+app.style.display="block";
+}
+}
+
+async function book(){
+
+await db.from("appointments").insert([{
+name,
+dob,
+email,
+date,
+time,
+doctor,
 notes:""
-};
+}]);
 
-for(let k in appt){
-if(!appt[k]) return alert("Missing "+k);
-}
-
-await db.from("appointments").insert([appt]);
 alert("Booked!");
-});
-
-/* EDIT */
-async function editAppointment(){
-const {data}=await db.from("appointments").select("*");
-
-let found=data.find(a=>a.name===get("editName") && a.dob===get("editDOB"));
-if(!found) return alert("Not found");
-
-let updates={};
-if(get("newDate")) updates.date=get("newDate");
-if(get("newTime")) updates.time=get("newTime");
-if(get("newDoctor")) updates.doctor=get("newDoctor");
-
-await db.from("appointments").update(updates).eq("id",found.id);
-
-alert("Updated");
-}
-
-/* CANCEL */
-async function cancelAppointment(){
-const {data}=await db.from("appointments").select("*");
-
-let found=data.find(a=>a.name===get("cancelName") && a.dob===get("cancelDOB"));
-if(!found) return alert("Not found");
-
-await db.from("appointments").delete().eq("id",found.id);
-
-alert("Cancelled");
-}
-
-function toggleEdit(){
-editBox.style.display="block";
-cancelBox.style.display="none";
-}
-
-function toggleCancel(){
-cancelBox.style.display="block";
-editBox.style.display="none";
 }
 </script>
 
