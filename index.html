@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Appointment Scheduling</title>
+<title>Appointment Scheduling System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -89,6 +89,7 @@ button{
  padding:20px;
  border-radius:10px;
  box-shadow:0 4px 12px rgba(0,0,0,.2);
+ z-index:999;
 }
 
 .row{
@@ -99,6 +100,46 @@ button{
  padding:12px;
  margin:10px 0;
  border-radius:8px;
+}
+
+/* CALENDAR STYLE */
+.dayBlock{
+ background:#eef4fa;
+ padding:15px;
+ margin-bottom:15px;
+ border-radius:10px;
+}
+
+.dayBlock h3{
+ margin:0 0 10px 0;
+}
+
+.apptItem{
+ background:white;
+ padding:10px;
+ margin:8px 0;
+ border-radius:8px;
+ cursor:pointer;
+ border-left:5px solid #3498db;
+}
+
+.apptItem:hover{
+ background:#f8fbff;
+}
+
+/* MODAL */
+#modal{
+ display:none;
+ position:fixed;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:white;
+ padding:20px;
+ width:350px;
+ border-radius:12px;
+ box-shadow:0 6px 20px rgba(0,0,0,.3);
+ z-index:1000;
 }
 </style>
 </head>
@@ -113,27 +154,28 @@ button{
 
 <div class="container" id="mainContainer">
 
+<!-- BOOK -->
 <div class="card">
 <h2>Book Appointment</h2>
 
 <form id="appointmentForm">
 
 <label>Name</label>
-<input id="name" type="text">
+<input id="name">
 
 <label>Date of Birth</label>
 <input id="dob" type="date">
 
 <label>Email</label>
-<input id="email" type="email">
+<input id="email">
 
 <label>Appointment Date</label>
 <input id="date" type="date">
 
-<label>Appointment Time</label>
+<label>Time</label>
 <input id="time" type="time">
 
-<label>Select Doctor</label>
+<label>Doctor</label>
 <select id="doctor">
 <option value="">Choose Doctor</option>
 <option value="Dr. Smith">Dr. Smith</option>
@@ -144,47 +186,33 @@ button{
 </form>
 </div>
 
+<!-- EDIT / CANCEL -->
 <div class="card">
 <h2>Manage Appointment</h2>
 
-<button class="secondary" onclick="showEdit()">Edit Appointment</button>
-<button class="danger" onclick="showCancel()">Cancel Appointment</button>
+<button onclick="toggleEdit()">Edit</button>
+<button onclick="toggleCancel()">Cancel</button>
 
 <div id="editBox" style="display:none;">
-<label>Name</label>
-<input id="editName">
-
-<label>Date of Birth</label>
+<input id="editName" placeholder="Name">
 <input id="editDOB" type="date">
-
-<label>New Date</label>
 <input id="newDate" type="date">
-
-<label>New Time</label>
 <input id="newTime" type="time">
-
-<label>New Doctor</label>
 <select id="newDoctor">
 <option value="">Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-
-<button type="button" onclick="editAppointment()">Update Appointment</button>
+<button onclick="editAppointment()">Update</button>
 </div>
 
 <div id="cancelBox" style="display:none;">
-<label>Name</label>
-<input id="cancelName">
-
-<label>Date of Birth</label>
+<input id="cancelName" placeholder="Name">
 <input id="cancelDOB" type="date">
-
-<button type="button" class="danger" onclick="cancelAppointment()">Cancel Appointment</button>
+<button onclick="cancelAppointment()">Cancel</button>
 </div>
 
 </div>
-
 </div>
 
 <!-- LOGIN BOXES -->
@@ -202,34 +230,41 @@ button{
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
-<input id="doctorPass" type="password" placeholder="Password">
+<input id="doctorPass" type="password">
 <button onclick="doctorLogin()">Login</button>
 </div>
 
-<!-- DASHBOARDS -->
+<!-- NURSE PAGE (CALENDAR) -->
 <div id="nursePage" style="display:none;padding:20px;">
 <button onclick="goBack()">⬅ Back</button>
-<h2>Nurse Dashboard</h2>
-<div id="nurseList"></div>
+<h2>Nurse Schedule</h2>
+<div id="calendar"></div>
 </div>
 
+<!-- DOCTOR PAGE -->
 <div id="doctorPage" style="display:none;padding:20px;">
 <button onclick="goBack()">⬅ Back</button>
-<h2>Doctor Dashboard</h2>
+<h2>Doctor Schedule</h2>
 <div id="doctorList"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+<h3>Appointment Details</h3>
+<div id="modalContent"></div>
+<button onclick="closeModal()">Close</button>
 </div>
 
 <div id="message"></div>
 
 <script>
 
-/* ---------------- SUPABASE ---------------- */
-const SUPABASE_URL = "https://xphczwydrcuvqsuthiii.supabase.co";
-const SUPABASE_KEY = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+/* SUPABASE */
+const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
+const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* ---------------- HELPERS ---------------- */
+/* HELPERS */
 const get = (id)=>document.getElementById(id).value.trim();
 
 function msg(text,err=false){
@@ -240,7 +275,7 @@ m.style.display="block";
 setTimeout(()=>m.style.display="none",3000);
 }
 
-/* ---------------- BOOK ---------------- */
+/* BOOK */
 document.getElementById("appointmentForm").addEventListener("submit", async (e)=>{
 e.preventDefault();
 
@@ -254,7 +289,6 @@ doctor:get("doctor"),
 notes:""
 };
 
-/* ONLY REQUIRED FIELDS (FIXED) */
 const required=["name","dob","email","date","time","doctor"];
 
 for(let k of required){
@@ -267,76 +301,80 @@ return;
 const {error}=await db.from("appointments").insert([appt]);
 
 if(error){
-console.log(error);
 msg(error.message,true);
 return;
 }
 
-msg("Appointment booked!");
+msg("Booked!");
 e.target.reset();
-refreshNurseList();
+loadCalendar();
 });
 
-/* ---------------- LOAD LIST ---------------- */
-async function refreshNurseList(){
+/* CALENDAR */
+async function loadCalendar(){
+
 const {data}=await db.from("appointments").select("*");
 
-nurseList.innerHTML="";
+let container=document.getElementById("calendar");
+container.innerHTML="";
+
+/* sort by date + time */
+data.sort((a,b)=>
+new Date(a.date+" "+a.time) - new Date(b.date+" "+b.time)
+);
+
+/* group by date */
+let grouped={};
 
 data.forEach(a=>{
-let row=document.createElement("div");
-row.className="row";
-row.innerText=`${a.name} - ${a.date} ${a.time} (${a.doctor})`;
-nurseList.appendChild(row);
+if(!grouped[a.date]) grouped[a.date]=[];
+grouped[a.date].push(a);
 });
+
+for(let day in grouped){
+
+let block=document.createElement("div");
+block.className="dayBlock";
+
+block.innerHTML=`<h3>${day}</h3>`;
+
+grouped[day].forEach(a=>{
+
+let div=document.createElement("div");
+div.className="apptItem";
+div.innerHTML=`${a.time} — ${a.name}`;
+
+div.onclick=()=>showDetails(a);
+
+block.appendChild(div);
+
+});
+
+container.appendChild(block);
+}
 }
 
-/* ---------------- EDIT ---------------- */
-async function editAppointment(){
-const name=get("editName");
-const dob=get("editDOB");
+/* MODAL */
+function showDetails(a){
 
-const {data}=await db.from("appointments").select("*");
+document.getElementById("modalContent").innerHTML=`
+<p><b>Name:</b> ${a.name}</p>
+<p><b>DOB:</b> ${a.dob}</p>
+<p><b>Email:</b> ${a.email}</p>
+<p><b>Date:</b> ${a.date}</p>
+<p><b>Time:</b> ${a.time}</p>
+<p><b>Doctor:</b> ${a.doctor}</p>
+<p><b>Notes:</b> ${a.notes||"None"}</p>
+`;
 
-let found=data.find(a=>a.name===name && a.dob===dob);
-
-if(!found){
-msg("Not found",true);
-return;
+document.getElementById("modal").style.display="block";
 }
 
-const updates={};
-if(get("newDate")) updates.date=get("newDate");
-if(get("newTime")) updates.time=get("newTime");
-if(get("newDoctor")) updates.doctor=get("newDoctor");
-
-await db.from("appointments").update(updates).eq("id",found.id);
-
-msg("Updated!");
-refreshNurseList();
+function closeModal(){
+document.getElementById("modal").style.display="none";
 }
 
-/* ---------------- CANCEL ---------------- */
-async function cancelAppointment(){
-const name=get("cancelName");
-const dob=get("cancelDOB");
-
-const {data}=await db.from("appointments").select("*");
-
-let found=data.find(a=>a.name===name && a.dob===dob);
-
-if(!found){
-msg("Not found",true);
-return;
-}
-
-await db.from("appointments").delete().eq("id",found.id);
-
-msg("Cancelled!");
-refreshNurseList();
-}
-
-/* ---------------- LOGIN ---------------- */
+/* LOGIN */
 function showLogin(){
 document.getElementById("loginBox").style.display="block";
 }
@@ -350,7 +388,7 @@ if(username.value==="nurse" && password.value==="1234"){
 mainContainer.style.display="none";
 loginBox.style.display="none";
 nursePage.style.display="block";
-refreshNurseList();
+loadCalendar();
 }else msg("Invalid login",true);
 }
 
@@ -364,27 +402,29 @@ return;
 mainContainer.style.display="none";
 doctorLoginBox.style.display="none";
 doctorPage.style.display="block";
-
 loadDoctor(doc);
 }
 
-/* ---------------- DOCTOR ---------------- */
+/* DOCTOR */
 async function loadDoctor(doc){
+
 const {data}=await db.from("appointments").select("*");
 
 doctorList.innerHTML="";
 
 data.filter(a=>a.doctor===doc).forEach(a=>{
+
 let div=document.createElement("div");
 div.className="card";
 
 div.innerHTML=`
-<p>${a.name} - ${a.date} ${a.time}</p>
+<p>${a.name} — ${a.date} ${a.time}</p>
 <textarea id="n${a.id}">${a.notes||""}</textarea>
-<button onclick="saveNote(${a.id})">Save Notes</button>
+<button onclick="saveNote(${a.id})">Save</button>
 `;
 
 doctorList.appendChild(div);
+
 });
 }
 
@@ -394,24 +434,62 @@ await db.from("appointments").update({notes:note}).eq("id",id);
 msg("Saved");
 }
 
-/* ---------------- NAV ---------------- */
+/* NAV */
 function goBack(){
 location.reload();
 }
 
-/* ---------------- UI ---------------- */
-function showEdit(){
+/* EDIT / CANCEL */
+function toggleEdit(){
 editBox.style.display="block";
 cancelBox.style.display="none";
 }
 
-function showCancel(){
+function toggleCancel(){
 cancelBox.style.display="block";
 editBox.style.display="none";
 }
 
+async function editAppointment(){
+const name=get("editName");
+const dob=get("editDOB");
+
+const {data}=await db.from("appointments").select("*");
+
+let found=data.find(a=>a.name===name && a.dob===dob);
+
+if(!found) return msg("Not found",true);
+
+let updates={};
+
+if(get("newDate")) updates.date=get("newDate");
+if(get("newTime")) updates.time=get("newTime");
+if(get("newDoctor")) updates.doctor=get("newDoctor");
+
+await db.from("appointments").update(updates).eq("id",found.id);
+
+msg("Updated");
+loadCalendar();
+}
+
+async function cancelAppointment(){
+const name=get("cancelName");
+const dob=get("cancelDOB");
+
+const {data}=await db.from("appointments").select("*");
+
+let found=data.find(a=>a.name===name && a.dob===dob);
+
+if(!found) return msg("Not found",true);
+
+await db.from("appointments").delete().eq("id",found.id);
+
+msg("Cancelled");
+loadCalendar();
+}
+
 /* INIT */
-refreshNurseList();
+loadCalendar();
 
 </script>
 
