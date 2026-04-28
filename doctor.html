@@ -1,65 +1,511 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Doctor</title>
+<title>Doctor Schedule</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.container{max-width:700px;margin:20px auto;}
-.card{background:white;padding:15px;margin-bottom:15px;border-radius:10px;}
-textarea{width:100%;padding:10px;}
-button{padding:10px;background:#3498db;color:white;border:none;border-radius:6px;}
+body{
+font-family:'Segoe UI',sans-serif;
+background:#f4f6f9;
+margin:0;
+}
+
+header{
+background:#2c3e50;
+color:white;
+padding:15px;
+text-align:center;
+position:relative;
+}
+
+.homeBtn{
+position:absolute;
+left:20px;
+top:14px;
+background:#3498db;
+padding:10px 16px;
+border-radius:8px;
+text-decoration:none;
+color:white;
+font-weight:bold;
+}
+
+.container{
+max-width:1200px;
+margin:25px auto;
+padding:0 15px;
+}
+
+.calNav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.calNav button{
+background:#3498db;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+cursor:pointer;
+}
+
+#monthTitle{
+font-size:28px;
+font-weight:bold;
+}
+
+.weekdays,
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:8px;
+}
+
+.weekdays div{
+background:#dfeaf4;
+padding:12px;
+text-align:center;
+font-weight:bold;
+border-radius:8px;
+}
+
+.day{
+background:white;
+min-height:150px;
+padding:10px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.blank{
+background:transparent;
+box-shadow:none;
+}
+
+.dayNum{
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.appt{
+background:#eef6ff;
+border-left:5px solid #3498db;
+padding:7px;
+margin-bottom:7px;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+}
+
+.appt:hover{
+background:#dcebff;
+}
+
+/* FULL SCREEN CHART */
+#overlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.45);
+z-index:90;
+}
+
+#chartModal{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:800px;
+max-width:95%;
+max-height:90vh;
+overflow:auto;
+background:white;
+padding:30px;
+border-radius:18px;
+z-index:100;
+box-shadow:0 8px 30px rgba(0,0,0,.35);
+}
+
+.chartGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+margin-top:20px;
+}
+
+label{
+display:block;
+font-weight:bold;
+margin-top:12px;
+}
+
+input, textarea{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:8px;
+border:1px solid #ccc;
+box-sizing:border-box;
+}
+
+textarea{
+height:120px;
+resize:vertical;
+}
+
+button{
+padding:12px 16px;
+border:none;
+border-radius:8px;
+background:#3498db;
+color:white;
+cursor:pointer;
+margin-top:18px;
+}
+
+.closeBtn{
+background:#7f8c8d;
+margin-left:8px;
+}
 </style>
 </head>
-
 <body>
 
-<header><h2>Doctor Schedule</h2></header>
+<header>
+<a href="index.html" class="homeBtn">⬅ Home</a>
+<h1>Doctor Schedule</h1>
+</header>
 
-<div class="container" id="list"></div>
+
+<div class="container">
+
+<div class="calNav">
+<button onclick="changeMonth(-1)">◀ Prev</button>
+
+<div id="monthTitle"></div>
+
+<button onclick="changeMonth(1)">Next ▶</button>
+</div>
+
+
+<div class="weekdays">
+<div>Sun</div>
+<div>Mon</div>
+<div>Tue</div>
+<div>Wed</div>
+<div>Thu</div>
+<div>Fri</div>
+<div>Sat</div>
+</div>
+
+<div id="calendar" class="calendar"></div>
+
+</div>
+
+
+
+<div id="overlay"></div>
+
+
+<div id="chartModal">
+
+<h2>Patient Visit Chart</h2>
+
+<div id="patientInfo"></div>
+
+<div class="chartGrid">
+
+<div>
+<label>Blood Pressure</label>
+<input id="bp">
+
+<label>Heart Rate</label>
+<input id="hr">
+
+<label>Height</label>
+<input id="height">
+
+<label>Weight</label>
+<input id="weight">
+</div>
+
+
+<div>
+<label>Additional Notes / Concerns</label>
+<textarea id="notes"></textarea>
+</div>
+
+</div>
+
+<button onclick="saveChart()">
+Save Chart
+</button>
+
+<button class="closeBtn"
+onclick="closeChart()">
+Close
+</button>
+
+</div>
+
+
 
 <script>
 
-const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db = supabase.createClient(supabaseUrl, supabaseKey);
+const db=supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
+);
 
-const doctor = "Dr. Smith";
 
-async function load(){
+/*
+IMPORTANT:
+Add these columns in Supabase if not already present:
 
-const {data,error}=await db.from("appointments").select("*");
+blood_pressure  text
+heart_rate      text
+height          text
+weight          text
 
-if(error) console.log(error);
+notes already exists
+*/
 
-data
-.filter(a=>a.doctor===doctor)
-.sort((a,b)=>new Date(a.date+" "+a.time)-new Date(b.date+" "+b.time))
+
+let appointments=[];
+let selected=null;
+
+let currentMonth=new Date();
+currentMonth.setDate(1);
+
+
+/* doctor chosen from login page */
+const doctorName=
+localStorage.getItem("doctorName")
+|| "Dr. Smith";
+
+
+
+async function loadAppointments(){
+
+const {data,error}=await db
+.from("appointments")
+.select("*")
+.eq("doctor",doctorName);
+
+if(error){
+console.error(error);
+return;
+}
+
+appointments=data||[];
+
+renderCalendar();
+
+}
+
+
+
+function renderCalendar(){
+
+let year=currentMonth.getFullYear();
+let month=currentMonth.getMonth();
+
+monthTitle.innerText=
+currentMonth.toLocaleString(
+"default",
+{
+month:"long",
+year:"numeric"
+}
+);
+
+calendar.innerHTML="";
+
+let firstDay=
+new Date(year,month,1).getDay();
+
+let daysInMonth=
+new Date(year,month+1,0).getDate();
+
+for(let i=0;i<firstDay;i++){
+
+let blank=document.createElement("div");
+blank.className="day blank";
+calendar.appendChild(blank);
+
+}
+
+
+for(let d=1; d<=daysInMonth; d++){
+
+let box=document.createElement("div");
+box.className="day";
+
+let dateString=
+`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+box.innerHTML=
+`<div class='dayNum'>${d}</div>`;
+
+
+appointments
+.filter(a=>a.date===dateString)
+.sort((a,b)=>a.time.localeCompare(b.time))
 .forEach(a=>{
 
-let div=document.createElement("div");
-div.className="card";
+let ap=document.createElement("div");
 
-div.innerHTML=`
-<b>${a.name}</b> - ${a.date} ${a.time}
-<textarea id="n${a.id}">${a.notes||""}</textarea>
-<button onclick="save(${a.id})">Save Notes</button>
+ap.className="appt";
+
+ap.innerHTML=
+`${formatTime(a.time)}<br>${a.name}`;
+
+ap.onclick=()=>{
+openChart(a);
+};
+
+box.appendChild(ap);
+
+});
+
+
+calendar.appendChild(box);
+
+}
+
+}
+
+
+
+function changeMonth(dir){
+currentMonth.setMonth(
+currentMonth.getMonth()+dir
+);
+
+renderCalendar();
+}
+
+
+
+function formatTime(t){
+
+if(!t) return "";
+
+let p=t.split(":");
+
+let h=parseInt(p[0]);
+let m=p[1];
+
+let suffix=
+h>=12?"PM":"AM";
+
+h=h%12||12;
+
+return `${h}:${m} ${suffix}`;
+
+}
+
+
+
+function openChart(a){
+
+selected=a;
+
+patientInfo.innerHTML=`
+
+<p><b>Name:</b> ${a.name}</p>
+
+<p><b>DOB:</b> ${a.dob}</p>
+
+<p><b>Email:</b> ${a.email}</p>
+
+<p><b>Appointment:</b>
+${a.date}
+${formatTime(a.time)}
+</p>
+
+<p><b>Doctor:</b>
+${a.doctor}
+</p>
+
 `;
 
-list.appendChild(div);
-});
+bp.value=
+a.blood_pressure||"";
+
+hr.value=
+a.heart_rate||"";
+
+height.value=
+a.height||"";
+
+weight.value=
+a.weight||"";
+
+notes.value=
+a.notes||"";
+
+
+overlay.style.display="block";
+chartModal.style.display="block";
+
 }
 
-async function save(id){
-let note=document.getElementById("n"+id).value;
-await db.from("appointments").update({notes:note}).eq("id",id);
-alert("Saved");
+
+
+function closeChart(){
+
+overlay.style.display="none";
+chartModal.style.display="none";
+
 }
 
-load();
+
+
+async function saveChart(){
+
+if(!selected) return;
+
+const {error}=await db
+.from("appointments")
+.update({
+
+blood_pressure:bp.value,
+
+heart_rate:hr.value,
+
+height:height.value,
+
+weight:weight.value,
+
+notes:notes.value
+
+})
+.eq("id",selected.id);
+
+
+if(error){
+alert(error.message);
+return;
+}
+
+alert("Patient chart saved.");
+
+closeChart();
+
+loadAppointments();
+
+}
+
+
+
+loadAppointments();
 
 </script>
 
