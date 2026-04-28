@@ -17,6 +17,19 @@ background:#2c3e50;
 color:white;
 padding:15px;
 text-align:center;
+position:relative;
+}
+
+header .homeBtn{
+position:absolute;
+left:20px;
+top:14px;
+background:#3498db;
+padding:10px 16px;
+border-radius:8px;
+color:white;
+text-decoration:none;
+font-weight:bold;
 }
 
 .container{
@@ -134,6 +147,7 @@ margin-left:8px;
 <body>
 
 <header>
+<a href="index.html" class="homeBtn">⬅ Home</a>
 <h1>Nurse Appointment Calendar</h1>
 </header>
 
@@ -179,23 +193,18 @@ Cancel Appointment
 
 </div>
 
-
 <script>
 
-/* SUPABASE */
 const db=supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
-
 
 let appointments=[];
 let selected=null;
 
 let currentMonth=new Date();
 currentMonth.setDate(1);
-
-
 
 async function loadAppointments(){
 
@@ -208,13 +217,10 @@ console.error(error);
 return;
 }
 
-appointments=data || [];
+appointments=data||[];
 
 renderCalendar();
-
 }
-
-
 
 function renderCalendar(){
 
@@ -238,16 +244,12 @@ new Date(year,month,1).getDay();
 let daysInMonth=
 new Date(year,month+1,0).getDate();
 
-
-/* blanks before month starts */
 for(let i=0;i<firstDay;i++){
 let blank=document.createElement("div");
 blank.className="day blank";
 calendar.appendChild(blank);
 }
 
-
-/* actual days */
 for(let d=1; d<=daysInMonth; d++){
 
 let box=document.createElement("div");
@@ -259,8 +261,6 @@ let dateString=
 box.innerHTML=
 `<div class='dayNum'>${d}</div>`;
 
-
-/* appointments for this day */
 appointments
 .filter(a=>a.date===dateString)
 .sort((a,b)=>a.time.localeCompare(b.time))
@@ -286,24 +286,18 @@ calendar.appendChild(box);
 
 }
 
-
-
 function changeMonth(dir){
 currentMonth.setMonth(
 currentMonth.getMonth()+dir
 );
-
 renderCalendar();
 }
-
-
 
 function formatTime(t){
 
 if(!t) return "";
 
 let parts=t.split(":");
-
 let h=parseInt(parts[0]);
 let m=parts[1];
 
@@ -315,8 +309,6 @@ h=h%12 || 12;
 return `${h}:${m} ${suffix}`;
 }
 
-
-
 function showAppointment(a){
 
 selected=a;
@@ -324,20 +316,12 @@ selected=a;
 details.innerHTML=`
 
 <p><b>Name:</b> ${a.name}</p>
-
 <p><b>DOB:</b> ${a.dob}</p>
-
 <p><b>Email:</b> ${a.email}</p>
-
 <p><b>Date:</b> ${a.date}</p>
-
 <p><b>Time:</b> ${formatTime(a.time)}</p>
-
 <p><b>Doctor:</b> ${a.doctor}</p>
-
-<p><b>Notes:</b>
-${a.notes || "None"}
-</p>
+<p><b>Notes:</b> ${a.notes || "None"}</p>
 
 `;
 
@@ -346,25 +330,16 @@ modal.style.display="block";
 
 }
 
-
-
 function closeModal(){
 overlay.style.display="none";
 modal.style.display="none";
 }
 
-
-
 async function cancelAppointment(){
 
 if(!selected) return;
 
-let confirmDelete=
-confirm(
-"Cancel this appointment?"
-);
-
-if(!confirmDelete) return;
+if(!confirm("Cancel this appointment?")) return;
 
 await db
 .from("appointments")
@@ -372,14 +347,10 @@ await db
 .eq("id",selected.id);
 
 closeModal();
-
 loadAppointments();
 
 }
 
-
-
-/* init */
 loadAppointments();
 
 </script>
