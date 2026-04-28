@@ -1,96 +1,56 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Nurse</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+if(!t) return '';
+let [h,m]=t.split(':');
+h=Number(h);
+let suffix=h>=12?'PM':'AM';
+h=h%12||12;
+return `${h}:${m} ${suffix}`;
+}
 
-<style>
-body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
-header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.container{max-width:700px;margin:20px auto;}
-.block{background:#eef4fa;padding:15px;margin-bottom:15px;border-radius:10px;}
-.item{background:white;padding:10px;margin:8px 0;border-radius:8px;cursor:pointer;}
-#modal{display:none;position:fixed;top:30%;left:50%;transform:translate(-50%);background:white;padding:20px;}
-</style>
-</head>
+function changeMonth(offset){
+currentMonth.setMonth(
+currentMonth.getMonth()+offset
+);
+renderCalendar();
+}
 
-<body>
+function showDetails(a){
+selectedAppointment=a;
 
-<header><h2>Nurse Calendar</h2></header>
-
-<div class="container" id="cal"></div>
-
-<div id="modal">
-<div id="info"></div>
-<button onclick="closeM()">Close</button>
-<button onclick="remove()">Cancel</button>
-</div>
-
-<script>
-
-const supabaseUrl = "https://xphczwydrcuvqsuthiii.supabase.co";
-const supabaseKey = "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
-const db = supabase.createClient(supabaseUrl, supabaseKey);
-
-let selected=null;
-
-async function load(){
-
-const {data,error}=await db.from("appointments").select("*");
-
-if(error) console.log(error);
-
-data.sort((a,b)=>new Date(a.date+" "+a.time)-new Date(b.date+" "+b.time));
-
-let grouped={};
-
-data.forEach(a=>{
-if(!grouped[a.date]) grouped[a.date]=[];
-grouped[a.date].push(a);
-});
-
-cal.innerHTML="";
-
-for(let d in grouped){
-let b=document.createElement("div");
-b.className="block";
-b.innerHTML="<h3>"+d+"</h3>";
-
-grouped[d].forEach(a=>{
-let div=document.createElement("div");
-div.className="item";
-div.innerText=a.time+" - "+a.name;
-
-div.onclick=()=>{
-selected=a;
-info.innerHTML=`
-<b>${a.name}</b><br>
-${a.email}<br>
-${a.doctor}<br>
-Notes: ${a.notes||"None"}
+document.getElementById('modalContent').innerHTML=`
+<p><b>Name:</b> ${a.name}</p>
+<p><b>DOB:</b> ${a.dob}</p>
+<p><b>Email:</b> ${a.email}</p>
+<p><b>Date:</b> ${a.date}</p>
+<p><b>Time:</b> ${formatTime(a.time)}</p>
+<p><b>Doctor:</b> ${a.doctor}</p>
+<p><b>Notes:</b> ${a.notes||'None'}</p>
 `;
-modal.style.display="block";
-};
 
-b.appendChild(div);
-});
-
-cal.appendChild(b);
-}
+overlay.style.display='block';
+modal.style.display='block';
 }
 
-function closeM(){
-modal.style.display="none";
+function closeModal(){
+overlay.style.display='none';
+modal.style.display='none';
 }
 
-async function remove(){
-await db.from("appointments").delete().eq("id",selected.id);
-closeM();
-load();
+async function cancelAppointment(){
+if(!selectedAppointment) return;
+
+if(!confirm('Cancel this appointment?')) return;
+
+await db
+.from('appointments')
+.delete()
+.eq('id',selectedAppointment.id);
+
+closeModal();
+loadAppointments();
 }
 
-load();
+loadAppointments();
 
 </script>
 
