@@ -1,55 +1,385 @@
 <!DOCTYPE html>
-if(!t) return '';
-let [h,m]=t.split(':');
-h=Number(h);
-let suffix=h>=12?'PM':'AM';
-h=h%12||12;
-return `${h}:${m} ${suffix}`;
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nurse Calendar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+font-family:'Segoe UI',sans-serif;
+background:#f4f6f9;
+margin:0;
 }
 
-function changeMonth(offset){
-currentMonth.setMonth(
-currentMonth.getMonth()+offset
+header{
+background:#2c3e50;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{
+max-width:1200px;
+margin:25px auto;
+padding:0 15px;
+}
+
+.calNav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.calNav button{
+background:#3498db;
+border:none;
+color:white;
+padding:10px 16px;
+border-radius:8px;
+cursor:pointer;
+}
+
+#monthTitle{
+font-size:28px;
+font-weight:bold;
+}
+
+.weekdays,
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:8px;
+}
+
+.weekdays div{
+background:#dfeaf4;
+padding:12px;
+text-align:center;
+font-weight:bold;
+border-radius:8px;
+}
+
+.day{
+background:white;
+min-height:150px;
+border-radius:12px;
+padding:10px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.blank{
+background:transparent;
+box-shadow:none;
+}
+
+.dayNum{
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.appt{
+background:#eef6ff;
+border-left:4px solid #3498db;
+padding:6px;
+margin-bottom:6px;
+border-radius:6px;
+font-size:12px;
+cursor:pointer;
+}
+
+.appt:hover{
+background:#dcecff;
+}
+
+#overlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.35);
+z-index:99;
+}
+
+#modal{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+width:380px;
+padding:25px;
+border-radius:14px;
+box-shadow:0 8px 30px rgba(0,0,0,.3);
+z-index:100;
+}
+
+button{
+padding:10px 14px;
+border:none;
+border-radius:8px;
+background:#3498db;
+color:white;
+cursor:pointer;
+margin-top:10px;
+}
+
+.cancelBtn{
+background:#e74c3c;
+margin-left:8px;
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Nurse Appointment Calendar</h1>
+</header>
+
+<div class="container">
+
+<div class="calNav">
+<button onclick="changeMonth(-1)">◀ Prev</button>
+
+<div id="monthTitle"></div>
+
+<button onclick="changeMonth(1)">Next ▶</button>
+</div>
+
+<div class="weekdays">
+<div>Sun</div>
+<div>Mon</div>
+<div>Tue</div>
+<div>Wed</div>
+<div>Thu</div>
+<div>Fri</div>
+<div>Sat</div>
+</div>
+
+<div id="calendar" class="calendar"></div>
+
+</div>
+
+<div id="overlay"></div>
+
+<div id="modal">
+<h2>Appointment Details</h2>
+
+<div id="details"></div>
+
+<button onclick="closeModal()">
+Close
+</button>
+
+<button class="cancelBtn"
+onclick="cancelAppointment()">
+Cancel Appointment
+</button>
+
+</div>
+
+
+<script>
+
+/* SUPABASE */
+const db=supabase.createClient(
+"https://xphczwydrcuvqsuthiii.supabase.co",
+"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
+
+
+let appointments=[];
+let selected=null;
+
+let currentMonth=new Date();
+currentMonth.setDate(1);
+
+
+
+async function loadAppointments(){
+
+const {data,error}=await db
+.from("appointments")
+.select("*");
+
+if(error){
+console.error(error);
+return;
+}
+
+appointments=data || [];
+
+renderCalendar();
+
+}
+
+
+
+function renderCalendar(){
+
+let year=currentMonth.getFullYear();
+let month=currentMonth.getMonth();
+
+monthTitle.innerText=
+currentMonth.toLocaleString(
+"default",
+{
+month:"long",
+year:"numeric"
+}
+);
+
+calendar.innerHTML="";
+
+let firstDay=
+new Date(year,month,1).getDay();
+
+let daysInMonth=
+new Date(year,month+1,0).getDate();
+
+
+/* blanks before month starts */
+for(let i=0;i<firstDay;i++){
+let blank=document.createElement("div");
+blank.className="day blank";
+calendar.appendChild(blank);
+}
+
+
+/* actual days */
+for(let d=1; d<=daysInMonth; d++){
+
+let box=document.createElement("div");
+box.className="day";
+
+let dateString=
+`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+box.innerHTML=
+`<div class='dayNum'>${d}</div>`;
+
+
+/* appointments for this day */
+appointments
+.filter(a=>a.date===dateString)
+.sort((a,b)=>a.time.localeCompare(b.time))
+.forEach(a=>{
+
+let ap=document.createElement("div");
+ap.className="appt";
+
+ap.innerHTML=
+`${formatTime(a.time)}<br>${a.name}`;
+
+ap.onclick=()=>{
+showAppointment(a);
+};
+
+box.appendChild(ap);
+
+});
+
+calendar.appendChild(box);
+
+}
+
+}
+
+
+
+function changeMonth(dir){
+currentMonth.setMonth(
+currentMonth.getMonth()+dir
+);
+
 renderCalendar();
 }
 
-function showDetails(a){
-selectedAppointment=a;
 
-document.getElementById('modalContent').innerHTML=`
+
+function formatTime(t){
+
+if(!t) return "";
+
+let parts=t.split(":");
+
+let h=parseInt(parts[0]);
+let m=parts[1];
+
+let suffix=
+h>=12?"PM":"AM";
+
+h=h%12 || 12;
+
+return `${h}:${m} ${suffix}`;
+}
+
+
+
+function showAppointment(a){
+
+selected=a;
+
+details.innerHTML=`
+
 <p><b>Name:</b> ${a.name}</p>
+
 <p><b>DOB:</b> ${a.dob}</p>
+
 <p><b>Email:</b> ${a.email}</p>
+
 <p><b>Date:</b> ${a.date}</p>
+
 <p><b>Time:</b> ${formatTime(a.time)}</p>
+
 <p><b>Doctor:</b> ${a.doctor}</p>
-<p><b>Notes:</b> ${a.notes||'None'}</p>
+
+<p><b>Notes:</b>
+${a.notes || "None"}
+</p>
+
 `;
 
-overlay.style.display='block';
-modal.style.display='block';
+overlay.style.display="block";
+modal.style.display="block";
+
 }
+
+
 
 function closeModal(){
-overlay.style.display='none';
-modal.style.display='none';
+overlay.style.display="none";
+modal.style.display="none";
 }
+
+
 
 async function cancelAppointment(){
-if(!selectedAppointment) return;
 
-if(!confirm('Cancel this appointment?')) return;
+if(!selected) return;
+
+let confirmDelete=
+confirm(
+"Cancel this appointment?"
+);
+
+if(!confirmDelete) return;
 
 await db
-.from('appointments')
+.from("appointments")
 .delete()
-.eq('id',selectedAppointment.id);
+.eq("id",selected.id);
 
 closeModal();
+
 loadAppointments();
+
 }
 
+
+
+/* init */
 loadAppointments();
 
 </script>
