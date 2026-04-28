@@ -121,11 +121,41 @@ top:50%;
 left:50%;
 transform:translate(-50%,-50%);
 background:white;
-width:380px;
+width:700px;
+max-width:95%;
+max-height:90vh;
+overflow:auto;
 padding:25px;
 border-radius:14px;
 box-shadow:0 8px 30px rgba(0,0,0,.3);
 z-index:100;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+margin-top:20px;
+}
+
+label{
+display:block;
+font-weight:bold;
+margin-top:12px;
+}
+
+input, textarea{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:8px;
+border:1px solid #ccc;
+box-sizing:border-box;
+}
+
+textarea{
+height:120px;
+resize:vertical;
 }
 
 button{
@@ -135,11 +165,16 @@ border-radius:8px;
 background:#3498db;
 color:white;
 cursor:pointer;
-margin-top:10px;
+margin-top:15px;
 }
 
 .cancelBtn{
 background:#e74c3c;
+margin-left:8px;
+}
+
+.closeBtn{
+background:#7f8c8d;
 margin-left:8px;
 }
 </style>
@@ -175,14 +210,45 @@ margin-left:8px;
 
 </div>
 
+
 <div id="overlay"></div>
 
+
 <div id="modal">
-<h2>Appointment Details</h2>
+
+<h2>Patient Chart</h2>
 
 <div id="details"></div>
 
-<button onclick="closeModal()">
+<div class="grid">
+
+<div>
+<label>Blood Pressure</label>
+<input id="bp">
+
+<label>Heart Rate</label>
+<input id="hr">
+
+<label>Height</label>
+<input id="height">
+
+<label>Weight</label>
+<input id="weight">
+</div>
+
+<div>
+<label>Notes / Concerns</label>
+<textarea id="notes"></textarea>
+</div>
+
+</div>
+
+<button onclick="saveChart()">
+Save Updates
+</button>
+
+<button class="closeBtn"
+onclick="closeModal()">
 Close
 </button>
 
@@ -192,6 +258,8 @@ Cancel Appointment
 </button>
 
 </div>
+
+
 
 <script>
 
@@ -205,6 +273,7 @@ let selected=null;
 
 let currentMonth=new Date();
 currentMonth.setDate(1);
+
 
 async function loadAppointments(){
 
@@ -220,7 +289,10 @@ return;
 appointments=data||[];
 
 renderCalendar();
+
 }
+
+
 
 function renderCalendar(){
 
@@ -244,11 +316,14 @@ new Date(year,month,1).getDay();
 let daysInMonth=
 new Date(year,month+1,0).getDate();
 
+
 for(let i=0;i<firstDay;i++){
 let blank=document.createElement("div");
 blank.className="day blank";
 calendar.appendChild(blank);
 }
+
+
 
 for(let d=1; d<=daysInMonth; d++){
 
@@ -261,12 +336,14 @@ let dateString=
 box.innerHTML=
 `<div class='dayNum'>${d}</div>`;
 
+
 appointments
 .filter(a=>a.date===dateString)
 .sort((a,b)=>a.time.localeCompare(b.time))
 .forEach(a=>{
 
 let ap=document.createElement("div");
+
 ap.className="appt";
 
 ap.innerHTML=
@@ -286,20 +363,28 @@ calendar.appendChild(box);
 
 }
 
+
+
 function changeMonth(dir){
+
 currentMonth.setMonth(
 currentMonth.getMonth()+dir
 );
+
 renderCalendar();
+
 }
+
+
 
 function formatTime(t){
 
 if(!t) return "";
 
-let parts=t.split(":");
-let h=parseInt(parts[0]);
-let m=parts[1];
+let p=t.split(":");
+
+let h=parseInt(p[0]);
+let m=p[1];
 
 let suffix=
 h>=12?"PM":"AM";
@@ -307,7 +392,10 @@ h>=12?"PM":"AM";
 h=h%12 || 12;
 
 return `${h}:${m} ${suffix}`;
+
 }
+
+
 
 function showAppointment(a){
 
@@ -321,25 +409,76 @@ details.innerHTML=`
 <p><b>Date:</b> ${a.date}</p>
 <p><b>Time:</b> ${formatTime(a.time)}</p>
 <p><b>Doctor:</b> ${a.doctor}</p>
-<p><b>Notes:</b> ${a.notes || "None"}</p>
 
 `;
+
+bp.value=
+a.blood_pressure || "";
+
+hr.value=
+a.heart_rate || "";
+
+height.value=
+a.height || "";
+
+weight.value=
+a.weight || "";
+
+notes.value=
+a.notes || "";
 
 overlay.style.display="block";
 modal.style.display="block";
 
 }
 
+
+
 function closeModal(){
 overlay.style.display="none";
 modal.style.display="none";
 }
 
+
+
+async function saveChart(){
+
+if(!selected) return;
+
+await db
+.from("appointments")
+.update({
+
+blood_pressure:bp.value,
+
+heart_rate:hr.value,
+
+height:height.value,
+
+weight:weight.value,
+
+notes:notes.value
+
+})
+.eq("id",selected.id);
+
+alert("Patient chart updated");
+
+closeModal();
+
+loadAppointments();
+
+}
+
+
+
 async function cancelAppointment(){
 
 if(!selected) return;
 
-if(!confirm("Cancel this appointment?")) return;
+if(!confirm(
+"Cancel this appointment?"
+)) return;
 
 await db
 .from("appointments")
@@ -347,9 +486,12 @@ await db
 .eq("id",selected.id);
 
 closeModal();
+
 loadAppointments();
 
 }
+
+
 
 loadAppointments();
 
