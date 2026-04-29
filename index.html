@@ -23,29 +23,30 @@ position:relative;
 header button{
 position:absolute;
 top:15px;
-padding:8px 15px;
+padding:10px 16px;
 }
 
 .container{
-max-width:600px;
+max-width:650px;
 margin:30px auto;
 }
 
 .card{
 background:white;
 padding:20px;
-border-radius:10px;
+border-radius:12px;
 margin-bottom:20px;
 box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
 label{
 display:block;
-margin-top:10px;
+margin-top:12px;
 font-weight:bold;
 }
 
-input,select{
+input,
+select{
 width:100%;
 padding:10px;
 margin-top:5px;
@@ -56,7 +57,7 @@ box-sizing:border-box;
 
 button{
 padding:12px;
-margin-top:10px;
+margin-top:12px;
 border:none;
 border-radius:6px;
 background:#3498db;
@@ -64,53 +65,73 @@ color:white;
 cursor:pointer;
 }
 
-.secondary{background:#27ae60;}
-.danger{background:#e74c3c;}
+.secondary{
+background:#27ae60;
+}
 
-#loginBox,#doctorLoginBox{
+.danger{
+background:#e74c3c;
+}
+
+#message{
+display:none;
+position:fixed;
+top:20px;
+right:20px;
+color:white;
+padding:15px;
+border-radius:8px;
+z-index:999;
+}
+
+#loginBox,
+#doctorLoginBox{
 display:none;
 position:fixed;
 top:30%;
 left:50%;
 transform:translate(-50%,-50%);
 background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,.2);
-z-index:999;
+padding:25px;
+width:350px;
+border-radius:12px;
+box-shadow:0 6px 20px rgba(0,0,0,.25);
+z-index:1000;
 }
 
-#message{
-position:fixed;
-top:20px;
-right:20px;
-display:none;
-color:white;
-padding:15px;
-border-radius:8px;
+.modalBtns{
+display:flex;
+gap:10px;
+margin-top:15px;
 }
 </style>
 </head>
-
 <body>
 
 <header>
 <h1>Appointment Scheduling System</h1>
 
-<button onclick="showDoctorLogin()" style="right:130px;">
+<button
+onclick="showDoctorLogin()"
+style="right:140px;">
 Doctor Login
 </button>
 
-<button onclick="showLogin()" style="right:20px;">
+<button
+onclick="showNurseLogin()"
+style="right:20px;">
 Nurse Login
 </button>
 
 </header>
 
+
+
 <div class="container">
 
 <!-- BOOK -->
 <div class="card">
+
 <h2>Book Appointment</h2>
 
 <form id="appointmentForm">
@@ -122,19 +143,19 @@ Nurse Login
 <input id="dob" type="date">
 
 <label>Email</label>
-<input id="email">
+<input id="email" type="email">
 
 <label>Appointment Date</label>
 <input id="date" type="date">
 
-<label>Time</label>
+<label>Appointment Time</label>
 <input id="time" type="time">
 
-<label>Doctor</label>
+<label>Select Doctor</label>
 <select id="doctor">
 <option value="">Choose Doctor</option>
-<option>Dr. Smith</option>
-<option>Dr. Brown</option>
+<option value="Dr. Smith">Dr. Smith</option>
+<option value="Dr. Brown">Dr. Brown</option>
 </select>
 
 <button type="submit">
@@ -142,21 +163,29 @@ Book Appointment
 </button>
 
 </form>
+
 </div>
+
+
 
 <!-- MANAGE -->
 <div class="card">
+
 <h2>Manage Appointment</h2>
 
-<button class="secondary" onclick="toggleEdit()">
+<button
+class="secondary"
+onclick="toggleEdit()">
 Edit Appointment
 </button>
 
-<button class="danger" onclick="toggleCancel()">
+<button
+class="danger"
+onclick="toggleCancel()">
 Cancel Appointment
 </button>
 
-<!-- EDIT HIDDEN -->
+
 <div id="editBox" style="display:none;">
 
 <label>Name</label>
@@ -173,7 +202,7 @@ Cancel Appointment
 
 <label>New Doctor</label>
 <select id="newDoctor">
-<option value="">Doctor</option>
+<option value="">Choose Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
 </select>
@@ -184,7 +213,8 @@ Update Appointment
 
 </div>
 
-<!-- CANCEL HIDDEN -->
+
+
 <div id="cancelBox" style="display:none;">
 
 <label>Name</label>
@@ -193,7 +223,8 @@ Update Appointment
 <label>Date of Birth</label>
 <input id="cancelDOB" type="date">
 
-<button class="danger"
+<button
+class="danger"
 onclick="cancelAppointment()">
 Cancel Appointment
 </button>
@@ -205,21 +236,36 @@ Cancel Appointment
 </div>
 
 
+
+
 <!-- NURSE LOGIN -->
 <div id="loginBox">
 
 <h3>Nurse Login</h3>
 
-<input id="username" placeholder="Username">
-<input id="password"
+<input
+id="username"
+placeholder="Username">
+
+<input
+id="password"
 type="password"
 placeholder="Password">
 
-<button onclick="login()">
+<div class="modalBtns">
+<button onclick="nurseLogin()">
 Login
 </button>
 
+<button
+class="danger"
+onclick="closeLogins()">
+Close
+</button>
 </div>
+
+</div>
+
 
 
 <!-- DOCTOR LOGIN -->
@@ -233,164 +279,65 @@ Login
 <option>Dr. Brown</option>
 </select>
 
-<input id="doctorPass"
+<input
+id="doctorPass"
 type="password"
 placeholder="Password">
+
+<div class="modalBtns">
 
 <button onclick="doctorLogin()">
 Login
 </button>
 
+<button
+class="danger"
+onclick="closeLogins()">
+Close
+</button>
+
 </div>
+
+</div>
+
 
 
 <div id="message"></div>
 
 
+
 <script>
 
 /* SUPABASE */
-const db = supabase.createClient(
+const db=supabase.createClient(
 "https://xphczwydrcuvqsuthiii.supabase.co",
 "sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs"
 );
 
 
-/* helper */
-const get=id=>document.getElementById(id).value.trim();
 
 function msg(text,error=false){
+
 let m=document.getElementById("message");
-m.style.background=error?"#e74c3c":"#2ecc71";
+
 m.innerText=text;
+
+m.style.background=
+error ? "#e74c3c":"#2ecc71";
+
 m.style.display="block";
 
 setTimeout(()=>{
 m.style.display="none";
 },3000);
-}
-
-
-/* SHOW/HIDE */
-function toggleEdit(){
-editBox.style.display="block";
-cancelBox.style.display="none";
-}
-
-function toggleCancel(){
-cancelBox.style.display="block";
-editBox.style.display="none";
-}
-
-
-/* BOOK */
-appointmentForm.addEventListener("submit",
-async function(e){
-
-e.preventDefault();
-
-const appt={
-name:get("name"),
-dob:get("dob"),
-email:get("email"),
-date:get("date"),
-time:get("time"),
-doctor:get("doctor"),
-notes:""
-};
-
-for(let v of Object.values(appt)){
-if(v===""){
-msg("Fill all fields",true);
-return;
-}
-}
-
-const {error}=await db
-.from("appointments")
-.insert([appt]);
-
-if(error){
-msg(error.message,true);
-return;
-}
-
-msg("Appointment booked");
-this.reset();
-
-});
-
-
-/* EDIT */
-async function editAppointment(){
-
-const {data}=await db
-.from("appointments")
-.select("*");
-
-let found=data.find(a=>
-a.name===get("editName")
-&&
-a.dob===get("editDOB")
-);
-
-if(!found){
-msg("Appointment not found",true);
-return;
-}
-
-let updates={};
-
-if(get("newDate"))
-updates.date=get("newDate");
-
-if(get("newTime"))
-updates.time=get("newTime");
-
-if(get("newDoctor"))
-updates.doctor=get("newDoctor");
-
-
-await db
-.from("appointments")
-.update(updates)
-.eq("id",found.id);
-
-msg("Appointment updated");
 
 }
 
 
-/* CANCEL */
-async function cancelAppointment(){
 
-const {data}=await db
-.from("appointments")
-.select("*");
+/* LOGIN POPUPS */
 
-let found=data.find(a=>
-a.name===get("cancelName")
-&&
-a.dob===get("cancelDOB")
-);
-
-if(!found){
-msg("Appointment not found",true);
-return;
-}
-
-await db
-.from("appointments")
-.delete()
-.eq("id",found.id);
-
-msg("Appointment cancelled");
-
-}
-
-
-/* LOGIN */
-function showLogin(){
+function showNurseLogin(){
 loginBox.style.display="block";
 }
 
@@ -398,7 +345,16 @@ function showDoctorLogin(){
 doctorLoginBox.style.display="block";
 }
 
-function login(){
+function closeLogins(){
+loginBox.style.display="none";
+doctorLoginBox.style.display="none";
+}
+
+
+
+/* LOGIN */
+
+function nurseLogin(){
 
 if(
 username.value==="nurse"
@@ -413,22 +369,211 @@ msg("Invalid login",true);
 
 }
 
+
+
 function doctorLogin(){
 
 if(
-doctorSelect.value &&
-doctorPass.value==="1234"
+!doctorSelect.value
+||
+doctorPass.value!=="1234"
 ){
+msg("Invalid login",true);
+return;
+}
+
 localStorage.setItem(
 "doctorName",
 doctorSelect.value
 );
 
 window.location.href="doctor.html";
+
 }
-else{
-msg("Invalid login",true);
+
+
+
+/* BOOK APPOINTMENT */
+
+document
+.getElementById("appointmentForm")
+.addEventListener(
+"submit",
+async function(e){
+
+e.preventDefault();
+
+const patientName=
+document.getElementById("name").value.trim();
+
+const dob=
+document.getElementById("dob").value;
+
+const email=
+document.getElementById("email").value.trim();
+
+const apptDate=
+document.getElementById("date").value;
+
+const apptTime=
+document.getElementById("time").value;
+
+const doctor=
+document.getElementById("doctor").value;
+
+
+if(
+!patientName||
+!dob||
+!email||
+!apptDate||
+!apptTime||
+!doctor
+){
+msg("Please fill out all fields",true);
+return;
 }
+
+
+const appointment={
+
+name:patientName,
+dob:dob,
+email:email,
+date:apptDate,
+time:apptTime,
+doctor:doctor,
+
+notes:"",
+blood_pressure:"",
+heart_rate:"",
+height:"",
+weight:""
+
+};
+
+
+const {error}=await db
+.from("appointments")
+.insert([appointment]);
+
+
+if(error){
+msg(error.message,true);
+return;
+}
+
+
+msg("Appointment booked successfully");
+
+appointmentForm.reset();
+
+}
+);
+
+
+
+/* EDIT/CANCEL UI */
+
+function toggleEdit(){
+
+editBox.style.display="block";
+cancelBox.style.display="none";
+
+}
+
+function toggleCancel(){
+
+cancelBox.style.display="block";
+editBox.style.display="none";
+
+}
+
+
+
+/* EDIT */
+
+async function editAppointment(){
+
+let name=
+editName.value.trim();
+
+let dob=
+editDOB.value;
+
+
+const {data}=await db
+.from("appointments")
+.select("*");
+
+
+let found=
+data.find(
+a=>a.name===name && a.dob===dob
+);
+
+if(!found){
+msg("Appointment not found",true);
+return;
+}
+
+
+let updates={};
+
+if(newDate.value)
+updates.date=newDate.value;
+
+if(newTime.value)
+updates.time=newTime.value;
+
+if(newDoctor.value)
+updates.doctor=newDoctor.value;
+
+
+await db
+.from("appointments")
+.update(updates)
+.eq("id",found.id);
+
+msg("Appointment updated");
+
+}
+
+
+
+/* CANCEL */
+
+async function cancelAppointment(){
+
+let name=
+cancelName.value.trim();
+
+let dob=
+cancelDOB.value;
+
+
+const {data}=await db
+.from("appointments")
+.select("*");
+
+
+let found=
+data.find(
+a=>a.name===name && a.dob===dob
+);
+
+if(!found){
+msg("Appointment not found",true);
+return;
+}
+
+
+await db
+.from("appointments")
+.delete()
+.eq("id",found.id);
+
+msg("Appointment cancelled");
 
 }
 
