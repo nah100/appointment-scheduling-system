@@ -7,110 +7,120 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {
+
+body{
     font-family:'Segoe UI',sans-serif;
     background:#f4f6f9;
     margin:0;
 }
 
 header{
- background:#2c3e50;
- color:white;
- padding:15px;
- text-align:center;
- position:relative;
+    background:#2c3e50;
+    color:white;
+    padding:15px;
+    text-align:center;
+    position:relative;
 }
 
 header button{
- position:absolute;
- top:15px;
- padding:8px 15px;
+    position:absolute;
+    top:15px;
+    padding:8px 15px;
 }
 
 .container{
- max-width:600px;
- margin:30px auto;
+    max-width:650px;
+    margin:30px auto;
 }
 
 .card{
- background:white;
- padding:20px;
- border-radius:10px;
- margin-bottom:20px;
- box-shadow:0px 4px 12px rgba(0,0,0,.1);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
 label{
- display:block;
- margin-top:10px;
- font-weight:bold;
+    display:block;
+    margin-top:10px;
+    font-weight:bold;
 }
 
 input,select,textarea{
- width:100%;
- padding:10px;
- margin-top:5px;
- border-radius:6px;
- border:1px solid #ccc;
- box-sizing:border-box;
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
 }
 
 button{
- padding:12px;
- margin-top:10px;
- border:none;
- border-radius:6px;
- background:#3498db;
- color:white;
- cursor:pointer;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:6px;
+    background:#3498db;
+    color:white;
+    cursor:pointer;
 }
 
-.secondary{background:#27ae60;}
-.danger{background:#e74c3c;}
+button:hover{
+    opacity:.9;
+}
+
+.danger{
+    background:#e74c3c;
+}
 
 #message{
- position:fixed;
- top:20px;
- right:20px;
- color:white;
- padding:15px;
- border-radius:8px;
- display:none;
- z-index:999;
+    position:fixed;
+    top:20px;
+    right:20px;
+    color:white;
+    padding:15px;
+    border-radius:8px;
+    display:none;
+    z-index:999;
 }
 
-#loginBox,#doctorLoginBox{
- display:none;
- position:fixed;
- top:30%;
- left:50%;
- transform:translate(-50%,-50%);
- background:white;
- padding:20px;
- border-radius:10px;
- box-shadow:0 4px 12px rgba(0,0,0,.2);
- z-index:999;
+#loginBox,
+#doctorLoginBox{
+    display:none;
+    position:fixed;
+    top:30%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+    z-index:999;
+    width:300px;
 }
 
 #modal{
- display:none;
- position:fixed;
- top:50%;
- left:50%;
- transform:translate(-50%,-50%);
- background:white;
- padding:20px;
- width:350px;
- border-radius:12px;
- box-shadow:0 6px 20px rgba(0,0,0,.3);
- z-index:1000;
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:20px;
+    width:350px;
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);
+    z-index:1000;
 }
+
 </style>
 </head>
 
 <body>
 
 <header>
+
 <h1>Appointment Scheduling System</h1>
 
 <button onclick="showDoctorLogin()" style="right:130px;">
@@ -125,7 +135,8 @@ Nurse Login
 
 <div class="container">
 
-<!-- BOOK -->
+<!-- BOOK APPOINTMENT -->
+
 <div class="card">
 
 <h2>Book Appointment</h2>
@@ -144,89 +155,129 @@ Nurse Login
 <label>Appointment Date</label>
 <input id="date" type="date">
 
-<label>Time</label>
+<label>Appointment Time</label>
 <input id="time" type="time">
 
 <label>Reason for Appointment</label>
 <textarea id="reason"></textarea>
 
 <label>Doctor</label>
+
 <select id="doctor">
+
 <option value="">Choose Doctor</option>
 <option value="Dr. Smith">Dr. Smith</option>
 <option value="Dr. Brown">Dr. Brown</option>
+
 </select>
 
-<button type="submit">Book Appointment</button>
+<button type="submit">
+Book Appointment
+</button>
 
 </form>
+
 </div>
 
 <!-- MANAGE -->
+
 <div class="card">
 
 <h2>Manage Appointment</h2>
 
-<button onclick="toggleEdit()">Edit</button>
-<button onclick="toggleCancel()">Cancel</button>
-<button onclick="toggleView()">View Appointment</button>
+<button onclick="toggleEdit()">
+Edit
+</button>
+
+<button class="danger" onclick="toggleCancel()">
+Cancel
+</button>
+
+<button onclick="toggleView()">
+View Appointment
+</button>
 
 <!-- EDIT -->
+
 <div id="editBox" style="display:none;">
 
-<input id="editName" placeholder="Name">
+<label>Name</label>
+<input id="editName">
+
+<label>Date of Birth</label>
 <input id="editDOB" type="date">
 
+<label>New Date</label>
 <input id="newDate" type="date">
+
+<label>New Time</label>
 <input id="newTime" type="time">
 
+<label>New Doctor</label>
+
 <select id="newDoctor">
+
 <option value="">Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
+
 </select>
 
 <button onclick="editAppointment()">
-Update
+Update Appointment
 </button>
 
 </div>
 
 <!-- CANCEL -->
+
 <div id="cancelBox" style="display:none;">
 
-<input id="cancelName" placeholder="Name">
+<label>Name</label>
+<input id="cancelName">
+
+<label>Date of Birth</label>
 <input id="cancelDOB" type="date">
 
-<button onclick="cancelAppointment()">
-Cancel
+<button class="danger" onclick="cancelAppointment()">
+Cancel Appointment
 </button>
 
 </div>
 
 <!-- VIEW -->
+
 <div id="viewBox" style="display:none;">
 
-<input id="viewName" placeholder="Name">
+<label>Name</label>
+<input id="viewName">
+
+<label>Date of Birth</label>
 <input id="viewDOB" type="date">
 
 <button onclick="viewAppointment()">
-View
+View Appointment
 </button>
 
 </div>
 
 </div>
+
 </div>
 
-<!-- LOGIN BOXES -->
+<!-- NURSE LOGIN -->
 
 <div id="loginBox">
 
 <h3>Nurse Login</h3>
 
 <input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+>
 
 <button onclick="login()">
 Login
@@ -234,17 +285,25 @@ Login
 
 </div>
 
+<!-- DOCTOR LOGIN -->
+
 <div id="doctorLoginBox">
 
 <h3>Doctor Login</h3>
 
 <select id="doctorSelect">
+
 <option value="">Choose Doctor</option>
 <option>Dr. Smith</option>
 <option>Dr. Brown</option>
+
 </select>
 
-<input id="doctorPass" type="password">
+<input
+id="doctorPass"
+type="password"
+placeholder="Password"
+>
 
 <button onclick="doctorLogin()">
 Login
@@ -252,7 +311,8 @@ Login
 
 </div>
 
-<!-- MODAL -->
+<!-- VIEW MODAL -->
+
 <div id="modal">
 
 <h3>Appointment Details</h3>
@@ -275,7 +335,7 @@ const supabaseUrl =
 "https://xphczwydrcuvqsuthiii.supabase.co";
 
 const supabaseKey =
-"sb_publishable_7SiZfx1kbnTZmAm72b0haw_ZoSrqUYs";
+"YOUR_SUPABASE_ANON_KEY";
 
 const db = supabase.createClient(
 supabaseUrl,
@@ -287,14 +347,14 @@ supabaseKey
 const get = (id)=>
 document.getElementById(id).value.trim();
 
-function msg(text,err=false){
+function msg(text,error=false){
 
 let m=document.getElementById("message");
 
-m.style.background=
-err ? "#e74c3c" : "#2ecc71";
-
 m.innerText=text;
+
+m.style.background=
+error ? "#e74c3c" : "#2ecc71";
 
 m.style.display="block";
 
@@ -307,7 +367,7 @@ m.style.display="none";
 /* BOOK */
 
 document.getElementById("appointmentForm")
-.addEventListener("submit", async (e)=>{
+.addEventListener("submit", async function(e){
 
 e.preventDefault();
 
@@ -343,7 +403,7 @@ for(let k of required){
 
 if(!appt[k]){
 
-msg("Missing: "+k,true);
+msg("Please fill out all fields",true);
 return;
 
 }
@@ -363,18 +423,24 @@ return;
 
 msg("Appointment Booked!");
 
-e.target.reset();
+this.reset();
 
 });
 
 /* LOGIN */
 
 function showLogin(){
-document.getElementById("loginBox").style.display="block";
+
+document.getElementById("loginBox")
+.style.display="block";
+
 }
 
 function showDoctorLogin(){
-document.getElementById("doctorLoginBox").style.display="block";
+
+document.getElementById("doctorLoginBox")
+.style.display="block";
+
 }
 
 function login(){
@@ -449,9 +515,16 @@ async function viewAppointment(){
 const name=get("viewName");
 const dob=get("viewDOB");
 
-const {data}=await db
+const {data,error}=await db
 .from("appointments")
 .select("*");
+
+if(error){
+
+msg(error.message,true);
+return;
+
+}
 
 let found=data.find(a=>
 a.name===name &&
@@ -465,54 +538,25 @@ return;
 
 }
 
-showDetails(found);
-
-}
-
-/* DETAILS */
-
-function showDetails(a){
-
 document.getElementById("modalContent").innerHTML=`
 
-<p><b>Name:</b> ${a.name}</p>
+<p><b>Date:</b> ${found.date}</p>
 
-<p><b>DOB:</b> ${a.dob}</p>
+<p><b>Time:</b> ${found.time}</p>
 
-<p><b>Email:</b> ${a.email}</p>
-
-<p><b>Date:</b> ${a.date}</p>
-
-<p><b>Time:</b> ${a.time}</p>
-
-<p><b>Doctor:</b> ${a.doctor}</p>
-
-<p><b>Reason:</b> ${a.reason||"None"}</p>
-
-<p><b>Blood Pressure:</b>
-${a.blood_pressure||"N/A"}</p>
-
-<p><b>Heart Rate:</b>
-${a.heart_rate||"N/A"}</p>
-
-<p><b>Height:</b>
-${a.height||"N/A"}</p>
-
-<p><b>Weight:</b>
-${a.weight||"N/A"}</p>
-
-<p><b>Notes:</b>
-${a.notes||"None"}</p>
+<p><b>Reason:</b> ${found.reason}</p>
 
 `;
 
-document.getElementById("modal").style.display="block";
+document.getElementById("modal")
+.style.display="block";
 
 }
 
 function closeModal(){
 
-document.getElementById("modal").style.display="none";
+document.getElementById("modal")
+.style.display="none";
 
 }
 
@@ -550,10 +594,17 @@ updates.time=get("newTime");
 if(get("newDoctor"))
 updates.doctor=get("newDoctor");
 
-await db
+const {error}=await db
 .from("appointments")
 .update(updates)
 .eq("id",found.id);
+
+if(error){
+
+msg(error.message,true);
+return;
+
+}
 
 msg("Appointment Updated");
 
@@ -582,10 +633,17 @@ return;
 
 }
 
-await db
+const {error}=await db
 .from("appointments")
 .delete()
 .eq("id",found.id);
+
+if(error){
+
+msg(error.message,true);
+return;
+
+}
 
 msg("Appointment Cancelled");
 
